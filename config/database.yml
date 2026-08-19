@@ -12,6 +12,16 @@ test:
   database: storage/test.sqlite3
 
 production:
-  adapter: postgresql
-  url: <%= ENV["DATABASE_URL"] %>
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  primary: &primary
+    adapter: postgresql
+    url: <%= ENV["DATABASE_URL"] %>
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  cache:
+    <<: *primary
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary
+    migrations_paths: db/cable_migrate

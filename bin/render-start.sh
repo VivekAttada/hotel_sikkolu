@@ -11,8 +11,8 @@ if [ -z "${DATABASE_URL}" ]; then
   exit 1
 fi
 
-echo "==> Running database migrations..."
-bundle exec rails db:migrate
+echo "==> Preparing all databases (primary + schemas)..."
+bundle exec rails db:prepare
 
 echo "==> Seeding database..."
 bundle exec rails db:seed
