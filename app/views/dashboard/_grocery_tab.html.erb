@@ -1,0 +1,88 @@
+<div class="hs-card">
+  <div class="hs-card-header hs-card-header-stack">
+    <div class="hs-card-header-title">
+      <h5>Grocery Inventory</h5>
+      <% if @last_grocery_import %>
+        <small>Last imported: <%= @last_grocery_import.strftime("%d %b %Y, %I:%M %p") %></small>
+      <% end %>
+    </div>
+    <div class="hs-card-header-actions">
+      <% if @grocery_items.any? %>
+        <%= link_to export_grocery_path, class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" do %>
+          <i class="bi bi-download me-1"></i> Export Excel
+        <% end %>
+      <% end %>
+      <%= form_with url: import_groceries_path, method: :post, multipart: true, class: "hs-inline-form" do |f| %>
+        <%= f.file_field :file, accept: ".xlsx,.xls,.csv", class: "form-control form-control-sm", required: true %>
+        <%= f.submit "Upload Excel", class: "btn btn-hs-gold btn-sm w-100 w-sm-auto" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <p class="text-hs-muted small mb-3">
+      Upload an Excel sheet with columns: <strong class="text-hs-gold">Item Name, Category, Quantity, Unit, Price, Supplier, Notes</strong>.
+      Each upload replaces the previous grocery list.
+    </p>
+
+    <% if @grocery_items.any? %>
+      <div class="d-none d-md-block table-responsive">
+        <table class="table hs-table align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item Name</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Price</th>
+              <th>Supplier</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @grocery_items.each_with_index do |item, index| %>
+              <tr>
+                <td><%= index + 1 %></td>
+                <td class="fw-semibold text-hs-gold"><%= item.item_name %></td>
+                <td><%= item.category %></td>
+                <td><%= number_with_precision(item.quantity, precision: 2, strip_insignificant_zeros: true) %></td>
+                <td><%= item.unit %></td>
+                <td><%= number_to_currency(item.price, unit: "₹") %></td>
+                <td><%= item.supplier %></td>
+                <td><%= item.notes %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-md-none hs-mobile-cards">
+        <% @grocery_items.each_with_index do |item, index| %>
+          <div class="hs-mobile-card">
+            <div class="hs-mobile-card-header">
+              <span class="hs-mobile-card-index"><%= index + 1 %></span>
+              <span class="hs-mobile-card-title"><%= item.item_name %></span>
+            </div>
+            <dl class="hs-mobile-dl">
+              <div><dt>Category</dt><dd><%= item.category.presence || "—" %></dd></div>
+              <div><dt>Quantity</dt><dd><%= number_with_precision(item.quantity, precision: 2, strip_insignificant_zeros: true) %> <%= item.unit %></dd></div>
+              <div><dt>Price</dt><dd><%= number_to_currency(item.price, unit: "₹") %></dd></div>
+              <div><dt>Supplier</dt><dd><%= item.supplier.presence || "—" %></dd></div>
+              <% if item.notes.present? %>
+                <div class="hs-mobile-full"><dt>Notes</dt><dd><%= item.notes %></dd></div>
+              <% end %>
+            </dl>
+          </div>
+        <% end %>
+      </div>
+
+      <p class="text-end text-hs-muted small mb-0 mt-3">Total items: <%= @grocery_items.count %></p>
+    <% else %>
+      <div class="text-center py-5 text-hs-muted">
+        <p class="mb-1">No grocery data yet.</p>
+        <p class="small">Upload an Excel sheet to get started.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

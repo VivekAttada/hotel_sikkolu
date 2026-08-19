@@ -1,0 +1,65 @@
+<div class="hs-card">
+  <div class="hs-card-header hs-card-header-stack">
+    <div class="hs-card-header-title">
+      <h5>Checklist</h5>
+      <small><%= @checklist_date.strftime("%A, %d %B %Y") %></small>
+    </div>
+    <div class="hs-card-header-actions hs-checklist-actions">
+      <% if @checklist_entries.any? %>
+        <%= link_to export_checklist_path(checklist_date: @checklist_date), class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" do %>
+          <i class="bi bi-download me-1"></i> Export Excel
+        <% end %>
+      <% end %>
+      <div class="progress hs-progress w-100">
+        <div class="progress-bar" role="progressbar" style="width: <%= @daily_checklist.completion_percentage %>%">
+          <%= @daily_checklist.completion_percentage %>%
+        </div>
+      </div>
+      <%= form_with url: root_path, method: :get, class: "hs-inline-form w-100" do %>
+        <%= hidden_field_tag :tab, "checklist" %>
+        <%= date_field_tag :checklist_date, @checklist_date, class: "form-control form-control-sm" %>
+        <%= submit_tag "Go", class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <% if @checklist_entries.any? %>
+      <% ChecklistTask::FREQUENCIES.each do |frequency| %>
+        <% entries = @checklist_entries_by_frequency[frequency] || [] %>
+        <% next if entries.empty? %>
+
+        <div class="checklist-section mb-4">
+          <div class="checklist-section-header">
+            <h6 class="checklist-section-title mb-0"><%= frequency.titleize %></h6>
+            <span class="checklist-section-count">
+              <%= entries.count { |e| e.checked } %> / <%= entries.size %> done
+            </span>
+          </div>
+
+          <div class="list-group list-group-flush hs-list-group">
+            <% entries.each do |entry| %>
+              <%= form_with url: checklist_entry_path(entry), method: :patch, class: "list-group-item list-group-item-action" do %>
+                <div class="form-check d-flex align-items-start gap-3 py-2 px-2">
+                  <%= check_box_tag :checked, "1", entry.checked,
+                        class: "form-check-input fs-5 mt-1 flex-shrink-0",
+                        onchange: "this.form.submit()" %>
+                  <label class="form-check-label flex-grow-1 <%= 'checked-item' if entry.checked %>">
+                    <%= entry.checklist_task.title %>
+                    <% if entry.checked_at %>
+                      <small class="d-block text-hs-success">Checked at <%= entry.checked_at.strftime("%I:%M %p") %></small>
+                    <% end %>
+                  </label>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-5 text-hs-muted">
+        <p>No checklist tasks configured.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

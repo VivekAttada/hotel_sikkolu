@@ -1,0 +1,49 @@
+<div class="hs-card">
+  <div class="hs-card-header hs-card-header-stack">
+    <div class="hs-card-header-title">
+      <h5>Hotel Sikkolu — Our Team</h5>
+      <small>Meet the people who run Hotel Sikkolu every day</small>
+    </div>
+    <% if @team_members.any? %>
+      <%= link_to export_team_members_path, class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" do %>
+        <i class="bi bi-download me-1"></i> Export Excel
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="hs-card-body">
+    <div class="row g-3 g-md-4">
+      <% @team_members.each do |member| %>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card h-100 team-card">
+            <div class="team-photo-wrapper">
+              <% if member.photo.attached? %>
+                <%= image_tag member.photo, class: "card-img-top team-photo", alt: member.name %>
+              <% else %>
+                <div class="team-photo-placeholder d-flex align-items-center justify-content-center">
+                  <span class="display-4 fw-bold"><%= member.name.first.upcase %></span>
+                </div>
+              <% end %>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title mb-2"><%= member.name %></h5>
+              <p class="card-text small"><%= member.description %></p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="hs-card mt-4">
+  <div class="hs-card-body">
+    <h5>About Hotel Sikkolu</h5>
+    <p class="text-hs-muted mb-0">
+      Hotel Sikkolu is a daily operations hub for our team — Bindu, Harish, Manoj, and Abhishek.
+      We manage grocery supplies, daily checklists, inventory quantities, and hotel information
+      all in one place. Upload your sheets each morning, track expenses through the day,
+      and complete your checklist before closing.
+    </p>
+  </div>
+</div>

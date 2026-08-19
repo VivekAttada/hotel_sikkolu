@@ -1,0 +1,685 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+
+// Hotel Sikkolu brand palette
+$hs-charcoal: #121212;
+$hs-olive: #3d4b35;
+$hs-olive-light: #4a5a40;
+$hs-olive-dark: #2e3a28;
+$hs-gold: #b89a5e;
+$hs-gold-light: #d4bc82;
+$hs-cream: #ebebe0;
+$hs-cream-muted: #a8a89a;
+
+$primary: $hs-olive;
+$secondary: $hs-gold;
+$success: #6b8f5e;
+$danger: #c45c5c;
+$body-bg: $hs-charcoal;
+$body-color: $hs-cream;
+$link-color: $hs-gold-light;
+$link-hover-color: $hs-gold;
+$border-color: rgba($hs-gold, 0.25);
+$font-family-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+$headings-font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+$headings-color: $hs-cream;
+
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons';
+
+// ── Base ──────────────────────────────────────────────
+.hotel-sikkolu-body {
+  background-color: $hs-charcoal;
+  min-height: 100vh;
+  color: $hs-cream;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: $headings-font-family;
+  letter-spacing: 0.02em;
+}
+
+// ── Navbar ────────────────────────────────────────────
+.hs-navbar {
+  background-color: $hs-olive-dark !important;
+  border-bottom: 2px solid $hs-gold;
+  padding: 0.6rem 0;
+}
+
+.hs-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+
+  &:hover {
+    opacity: 0.92;
+  }
+}
+
+.hs-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid $hs-gold;
+}
+
+.hs-brand-text {
+  line-height: 1.15;
+
+  .hs-brand-sub {
+    display: block;
+    font-family: $font-family-sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: $hs-cream-muted;
+  }
+
+  .hs-brand-name {
+    display: block;
+    font-family: $headings-font-family;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: $hs-cream;
+    letter-spacing: 0.06em;
+  }
+}
+
+.hs-navbar-tagline {
+  color: $hs-cream-muted !important;
+  font-size: 0.85rem;
+}
+
+// ── Cards ─────────────────────────────────────────────
+.hs-card {
+  background-color: $hs-olive;
+  border: 1px solid rgba($hs-gold, 0.3);
+  border-radius: 0.5rem;
+  color: $hs-cream;
+  overflow: hidden;
+}
+
+.hs-card-header {
+  background-color: $hs-olive-dark;
+  border-bottom: 1px solid rgba($hs-gold, 0.25);
+  padding: 1rem 1.25rem;
+  color: $hs-cream;
+
+  h5, h6 {
+    color: $hs-cream;
+    margin-bottom: 0;
+  }
+
+  small {
+    color: $hs-cream-muted;
+  }
+}
+
+.hs-card-body {
+  padding: 1.25rem;
+}
+
+// ── Tabs ──────────────────────────────────────────────
+.dashboard .nav-tabs {
+  border-bottom: 2px solid rgba($hs-gold, 0.3);
+  gap: 0.25rem;
+}
+
+.dashboard .nav-tabs .nav-link {
+  font-family: $headings-font-family;
+  font-weight: 600;
+  color: $hs-cream-muted;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.375rem 0.375rem 0 0;
+  padding: 0.65rem 1.25rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: $hs-cream;
+    border-color: rgba($hs-gold, 0.2);
+    background: rgba($hs-olive, 0.5);
+  }
+
+  &.active {
+    color: $hs-charcoal;
+    background-color: $hs-gold;
+    border-color: $hs-gold;
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────
+.btn-hs-gold {
+  background-color: $hs-gold;
+  border-color: $hs-gold;
+  color: $hs-charcoal;
+  font-weight: 600;
+
+  &:hover, &:focus {
+    background-color: $hs-gold-light;
+    border-color: $hs-gold-light;
+    color: $hs-charcoal;
+  }
+}
+
+.btn-hs-outline {
+  background: transparent;
+  border: 1px solid $hs-gold;
+  color: $hs-gold;
+
+  &:hover, &:focus {
+    background: rgba($hs-gold, 0.15);
+    border-color: $hs-gold-light;
+    color: $hs-gold-light;
+  }
+}
+
+.btn-hs-danger {
+  background: transparent;
+  border: 1px solid $danger;
+  color: lighten($danger, 15%);
+
+  &:hover {
+    background: rgba($danger, 0.15);
+    color: lighten($danger, 20%);
+  }
+}
+
+// ── Forms ─────────────────────────────────────────────
+.form-control,
+.form-select {
+  background-color: $hs-olive-dark;
+  border: 1px solid rgba($hs-gold, 0.3);
+  color: $hs-cream;
+
+  &:focus {
+    background-color: $hs-olive-dark;
+    border-color: $hs-gold;
+    color: $hs-cream;
+    box-shadow: 0 0 0 0.2rem rgba($hs-gold, 0.2);
+  }
+
+  &::file-selector-button {
+    background-color: $hs-gold;
+    border: none;
+    color: $hs-charcoal;
+    font-weight: 600;
+  }
+}
+
+.form-check-input {
+  background-color: $hs-olive-dark;
+  border-color: rgba($hs-gold, 0.5);
+
+  &:checked {
+    background-color: $hs-gold;
+    border-color: $hs-gold;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba($hs-gold, 0.25);
+  }
+}
+
+// ── Tables ────────────────────────────────────────────
+.hs-table {
+  color: $hs-cream;
+  margin-bottom: 0;
+
+  thead {
+    background-color: $hs-olive-dark;
+
+    th {
+      color: $hs-gold;
+      font-family: $font-family-sans-serif;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-color: rgba($hs-gold, 0.2);
+      white-space: nowrap;
+    }
+  }
+
+  tbody tr {
+    border-color: rgba($hs-gold, 0.12);
+
+    &:hover {
+      background-color: rgba($hs-gold, 0.06);
+    }
+  }
+
+  td {
+    border-color: rgba($hs-gold, 0.12);
+    vertical-align: middle;
+  }
+}
+
+// ── Stats boxes ───────────────────────────────────────
+.hs-stat-box {
+  background-color: $hs-olive-dark;
+  border: 1px solid rgba($hs-gold, 0.25);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+
+  .hs-stat-label {
+    color: $hs-cream-muted;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .hs-stat-value {
+    font-family: $headings-font-family;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $hs-gold;
+  }
+
+  &.hs-stat-success .hs-stat-value {
+    color: lighten($success, 10%);
+  }
+}
+
+// ── Progress bar ──────────────────────────────────────
+.hs-progress {
+  background-color: $hs-olive-dark;
+  border: 1px solid rgba($hs-gold, 0.2);
+  height: 26px;
+  border-radius: 0.375rem;
+  overflow: hidden;
+
+  .progress-bar {
+    background-color: $hs-gold;
+    color: $hs-charcoal;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+}
+
+// ── Checklist ─────────────────────────────────────────
+.hs-list-group {
+  .list-group-item {
+    background-color: transparent;
+    border-color: rgba($hs-gold, 0.15);
+    color: $hs-cream;
+    padding: 0;
+
+    &:hover {
+      background-color: rgba($hs-gold, 0.05);
+    }
+  }
+
+  .form-check-label.checked-item {
+    text-decoration: line-through;
+    color: $hs-cream-muted;
+  }
+}
+
+// ── Team cards ────────────────────────────────────────
+.team-card {
+  background-color: $hs-olive-dark;
+  border: 1px solid rgba($hs-gold, 0.25) !important;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .card-title {
+    font-family: $headings-font-family;
+    color: $hs-gold;
+  }
+
+  .card-text {
+    color: $hs-cream-muted;
+  }
+}
+
+.team-photo-wrapper {
+  height: 220px;
+  overflow: hidden;
+  border-bottom: 2px solid $hs-gold;
+}
+
+.team-photo {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.team-photo-placeholder {
+  height: 220px;
+  background: linear-gradient(135deg, $hs-olive, $hs-olive-dark);
+
+  span {
+    font-family: $headings-font-family;
+    color: $hs-gold;
+  }
+}
+
+// ── Alerts ────────────────────────────────────────────
+.alert-success {
+  background-color: rgba($success, 0.15);
+  border-color: rgba($success, 0.4);
+  color: lighten($success, 25%);
+}
+
+.alert-danger {
+  background-color: rgba($danger, 0.15);
+  border-color: rgba($danger, 0.4);
+  color: lighten($danger, 20%);
+}
+
+// ── Footer ────────────────────────────────────────────
+.hs-footer {
+  border-top: 1px solid rgba($hs-gold, 0.2) !important;
+  color: $hs-cream-muted;
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+}
+
+// ── Text utilities ────────────────────────────────────
+.text-hs-muted {
+  color: $hs-cream-muted !important;
+}
+
+.text-hs-gold {
+  color: $hs-gold !important;
+}
+
+.text-hs-success {
+  color: lighten($success, 12%) !important;
+}
+
+.text-hs-danger {
+  color: lighten($danger, 12%) !important;
+}
+
+.list-group-item form {
+  margin: 0;
+}
+
+.checklist-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: $hs-olive-dark;
+  border-left: 4px solid $hs-gold;
+  border-radius: 0.25rem;
+}
+
+.checklist-section-title {
+  font-family: $headings-font-family;
+  color: $hs-gold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+}
+
+.checklist-section-count {
+  color: $hs-cream-muted;
+  font-size: 0.8rem;
+}
+
+// ── Mobile layout ─────────────────────────────────────
+.hs-mobile-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 2px solid rgba($hs-gold, 0.3);
+  gap: 0.35rem;
+  padding-bottom: 2px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-item {
+    flex-shrink: 0;
+  }
+}
+
+.hs-card-header-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.hs-card-header-title {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.hs-card-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 220px;
+  justify-content: flex-end;
+}
+
+.hs-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 100%;
+
+  .form-control {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
+
+.hs-checklist-actions {
+  flex-direction: column;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+
+.hs-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hs-mobile-card {
+  background-color: $hs-olive-dark;
+  border: 1px solid rgba($hs-gold, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.85rem;
+}
+
+.hs-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.hs-mobile-card-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: $hs-gold;
+  color: $hs-charcoal;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.hs-mobile-card-title {
+  font-weight: 600;
+  color: $hs-gold;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.hs-mobile-dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+
+  div {
+    min-width: 0;
+  }
+
+  dt {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $hs-cream-muted;
+    margin-bottom: 0.1rem;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  .hs-mobile-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.hs-badge-available {
+  background-color: rgba($success, 0.2);
+  color: lighten($success, 15%);
+  border: 1px solid rgba($success, 0.35);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.hs-expense-form {
+  border-top: 1px solid rgba($hs-gold, 0.15);
+  padding-top: 0.75rem;
+}
+
+@media (max-width: 767.98px) {
+  .hs-navbar {
+    padding: 0.5rem 0;
+  }
+
+  .hs-logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .hs-brand-text .hs-brand-name {
+    font-size: 1.2rem;
+  }
+
+  .hs-card-header,
+  .hs-card-body {
+    padding: 0.85rem 1rem;
+  }
+
+  .hs-card-header-actions {
+    flex: 1 1 100%;
+    justify-content: stretch;
+  }
+
+  .hs-inline-form {
+    width: 100%;
+
+    .form-control,
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .dashboard .nav-tabs .nav-link {
+    font-size: 0.82rem;
+    padding: 0.55rem 0.85rem;
+  }
+
+  .hs-stat-box {
+    padding: 0.65rem 0.5rem;
+
+    .hs-stat-label {
+      font-size: 0.65rem;
+    }
+
+    .hs-stat-value {
+      font-size: 1.25rem;
+    }
+  }
+
+  .checklist-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .form-check-label {
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+
+  .team-photo-wrapper,
+  .team-photo,
+  .team-photo-placeholder {
+    height: 180px;
+  }
+
+  .hs-footer {
+    margin-top: 2rem;
+    padding: 1rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .alert {
+    font-size: 0.9rem;
+    padding: 0.65rem 0.85rem;
+  }
+}
+
+@media (min-width: 576px) {
+  .hs-checklist-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center !important;
+  }
+
+  .hs-inline-form .form-control {
+    max-width: 180px;
+  }
+}
+
+@media (min-width: 768px) {
+  .hs-checklist-actions {
+    flex: 0 1 auto;
+    flex-direction: row;
+    align-items: center !important;
+    justify-content: flex-end !important;
+  }
+
+  .hs-checklist-actions .hs-progress {
+    min-width: 120px;
+    width: auto;
+  }
+
+  .hs-inline-form {
+    flex: 0 1 auto;
+    width: auto;
+  }
+}

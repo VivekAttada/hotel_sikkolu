@@ -1,0 +1,49 @@
+<div class="dashboard">
+  <ul class="nav nav-tabs hs-mobile-tabs mb-3 mb-md-4" id="hotelTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'grocery' %>" id="grocery-tab" data-bs-toggle="tab" data-bs-target="#grocery-panel" type="button" role="tab">
+        <i class="bi bi-basket d-md-none me-1"></i>Grocery
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'checklist' %>" id="checklist-tab" data-bs-toggle="tab" data-bs-target="#checklist-panel" type="button" role="tab">
+        <i class="bi bi-check2-square d-md-none me-1"></i>Checklist
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'quantity' %>" id="quantity-tab" data-bs-toggle="tab" data-bs-target="#quantity-panel" type="button" role="tab">
+        <i class="bi bi-box-seam d-md-none me-1"></i>Quantities
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'hotel_info' %>" id="hotel-info-tab" data-bs-toggle="tab" data-bs-target="#hotel-info-panel" type="button" role="tab">
+        <i class="bi bi-info-circle d-md-none me-1"></i>Info
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="hotelTabsContent">
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'grocery' %>" id="grocery-panel" role="tabpanel">
+      <%= render "dashboard/grocery_tab" %>
+    </div>
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'checklist' %>" id="checklist-panel" role="tabpanel">
+      <%= render "dashboard/checklist_tab" %>
+    </div>
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'quantity' %>" id="quantity-panel" role="tabpanel">
+      <%= render "dashboard/quantity_tab" %>
+    </div>
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'hotel_info' %>" id="hotel-info-panel" role="tabpanel">
+      <%= render "dashboard/hotel_info_tab" %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const activeTab = "<%= @active_tab %>";
+    const tabButton = document.querySelector(`#${activeTab === 'hotel_info' ? 'hotel-info' : activeTab}-tab`);
+    if (tabButton) {
+      new bootstrap.Tab(tabButton).show();
+    }
+  });
+</script>

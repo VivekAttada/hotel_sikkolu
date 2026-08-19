@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Hotel Sikkolu" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Hotel Sikkolu">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="hotel-sikkolu-body">
+    <nav class="navbar navbar-expand-lg hs-navbar shadow-sm">
+      <div class="container">
+        <a class="hs-navbar-brand" href="<%= root_path %>">
+          <%= image_tag "hotel_sikkolu_logo.png", alt: "Hotel Sikkolu Logo", class: "hs-logo" %>
+          <span class="hs-brand-text">
+            <span class="hs-brand-sub">Hotel</span>
+            <span class="hs-brand-name">Sikkolu</span>
+          </span>
+        </a>
+        <span class="navbar-text hs-navbar-tagline d-none d-md-inline ms-auto">
+          Daily grocery, checklist &amp; inventory management
+        </span>
+      </div>
+    </nav>
+
+    <main class="container-fluid container-lg px-3 px-md-4 py-3 py-md-4">
+      <% if notice.present? %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= notice %>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% end %>
+
+      <% if alert.present? %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= alert %>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <footer class="text-center hs-footer">
+      <small>&copy; <%= Date.current.year %> Hotel Sikkolu — Bindu, Harish, Manoj &amp; Abhishek</small>
+    </footer>
+  </body>
+</html>
