@@ -4,7 +4,8 @@
   "scripts": {
     "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules",
     "build:css:prefix": "postcss ./app/assets/builds/application.css --use=autoprefixer --output=./app/assets/builds/application.css",
-    "build:css": "npm run build:css:compile && npm run build:css:prefix",
+    "build:css:fonts": "mkdir -p app/assets/builds/fonts && cp node_modules/bootstrap-icons/font/fonts/* app/assets/builds/fonts/",
+    "build:css": "npm run build:css:compile && npm run build:css:prefix && npm run build:css:fonts",
     "watch:css": "nodemon --watch ./app/assets/stylesheets/ --ext scss --exec \"npm run build:css\""
   },
   "browserslist": [
