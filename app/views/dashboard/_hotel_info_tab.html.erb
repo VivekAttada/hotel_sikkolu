@@ -1,14 +1,11 @@
 <div class="hs-card">
-  <div class="hs-card-header hs-card-header-stack">
-    <div class="hs-card-header-title">
-      <h5>Hotel Sikkolu — Our Team</h5>
-      <small>Meet the people who run Hotel Sikkolu every day</small>
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Hotel Sikkolu — Our Team</h5>
+        <small>Meet the people who run Hotel Sikkolu every day</small>
+      </div>
     </div>
-    <% if @team_members.any? %>
-      <%= link_to export_team_members_path, class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" do %>
-        <i class="bi bi-download me-1"></i> Export Excel
-      <% end %>
-    <% end %>
   </div>
 
   <div class="hs-card-body">
@@ -40,7 +37,7 @@
   <div class="hs-card-body">
     <h5>About Hotel Sikkolu</h5>
     <p class="text-hs-muted mb-0">
-      Hotel Sikkolu is a daily operations hub for our team — Bindu, Harish, Manoj, and Abhishek.
+      Hotel Sikkolu is a daily operations hub for our team — Bindu/Hareesh, Somnath, Manoj, and Abhishek.
       We manage grocery supplies, daily checklists, inventory quantities, and hotel information
       all in one place. Upload your sheets each morning, track expenses through the day,
       and complete your checklist before closing.

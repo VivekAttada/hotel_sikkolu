@@ -1,0 +1,37 @@
+<% content_for :title, "Sign in — Hotel Sikkolu" %>
+
+<div class="hs-login-page">
+  <div class="hs-login-card">
+    <div class="hs-login-brand">
+      <%= image_tag "hotel_sikkolu_logo.png", alt: "Hotel Sikkolu", class: "hs-login-logo" %>
+      <div>
+        <span class="hs-brand-sub">Hotel</span>
+        <span class="hs-brand-name">Sikkolu</span>
+      </div>
+    </div>
+
+    <h1 class="hs-login-title">Sign in</h1>
+    <p class="hs-login-subtitle">Access grocery, checklist &amp; inventory</p>
+
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "hs-login-form" }) do |f| %>
+      <div class="mb-3">
+        <%= f.label :username, "Username", class: "form-label" %>
+        <%= f.text_field :username, autofocus: true, autocomplete: "username", class: "form-control", required: true, placeholder: "hotel_sikkolu" %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :password, class: "form-label" %>
+        <%= f.password_field :password, autocomplete: "current-password", class: "form-control", required: true, placeholder: "••••••••" %>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="form-check mb-3">
+          <%= f.check_box :remember_me, class: "form-check-input hs-checklist-checkbox" %>
+          <%= f.label :remember_me, class: "form-check-label" %>
+        </div>
+      <% end %>
+
+      <%= f.submit "Sign in", class: "btn btn-hs-gold w-100 hs-action-btn" %>
+    <% end %>
+  </div>
+</div>

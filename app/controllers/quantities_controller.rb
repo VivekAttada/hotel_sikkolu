@@ -14,6 +14,14 @@ class QuantitiesController < ApplicationController
     redirect_to root_path(tab: "quantity"), alert: "Import failed: #{e.message}"
   end
 
+  def sample
+    data, filename = XlsxExporter.quantity_sample_template
+    send_data data,
+      filename: filename,
+      type: XlsxExporter::MIME_TYPE,
+      disposition: "attachment"
+  end
+
   def add_expense
     item = InventoryItem.find(params[:inventory_item_id])
     quantity_used = params[:quantity_used]
@@ -21,8 +29,13 @@ class QuantitiesController < ApplicationController
 
     item.record_expense!(quantity_used, notes: notes)
 
-    redirect_to root_path(tab: "quantity", inventory_date: item.daily_inventory.inventory_date),
-                notice: "Recorded expense of #{quantity_used} #{item.unit} for #{item.item_name}."
+    redirect_to root_path(
+      tab: "quantity",
+      inventory_date: item.daily_inventory.inventory_date,
+      item_q: params[:item_q],
+      unit: params[:unit],
+      stock: params[:stock]
+    ), notice: "Recorded expense of #{quantity_used} #{item.unit} for #{item.item_name}."
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path(tab: "quantity"), alert: "Inventory item not found."
   rescue ArgumentError => e

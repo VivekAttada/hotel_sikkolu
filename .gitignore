@@ -40,3 +40,6 @@
 !/app/assets/builds/fonts/
 
 /node_modules
+
+# Ignore locally vendored gems
+/vendor/bundle

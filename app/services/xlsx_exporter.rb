@@ -3,22 +3,46 @@ class XlsxExporter
 
   class << self
     def grocery_items(items)
-      build(filename: "grocery_#{date_stamp}.xlsx") do |workbook|
+      yesterday = (Date.current - 1.day).strftime("%d/%m")
+      build(filename: "hotel_sikkolu_grocery_#{date_stamp}.xlsx") do |workbook|
         add_sheet(workbook, "Grocery Inventory") do |sheet|
-          sheet.add_row [ "#", "Item Name", "Category", "Quantity", "Unit", "Price", "Supplier", "Notes", "Imported At" ]
+          sheet.add_row [ "HOTEL SIKKOLU - Chicken & Item Inventory Update (Date: #{Date.current.strftime('%d/%m/%Y')})" ]
+          sheet.add_row []
+          sheet.add_row [ "Sl No.", "Item Name", "Old Stock (#{yesterday})", "New Stock Added", "Qty", "Total Updated Stock" ]
           items.each_with_index do |item, index|
             sheet.add_row [
-              index + 1,
+              item.serial_no.presence || (index + 1),
               item.item_name,
-              item.category,
-              item.quantity,
+              item.old_stock,
+              item.new_stock_added,
               item.unit,
-              item.price,
-              item.supplier,
-              item.notes,
-              item.imported_at&.strftime("%d %b %Y %I:%M %p")
+              "#{number_format(item.quantity)} #{item.unit}".strip
             ]
           end
+        end
+      end
+    end
+
+    def grocery_sample_template
+      yesterday = (Date.current - 1.day).strftime("%d/%m")
+
+      build(filename: "hotel_sikkolu_grocery_sample.xlsx") do |workbook|
+        add_sheet(workbook, "Inventory Update") do |sheet|
+          sheet.add_row [ "HOTEL SIKKOLU - Chicken & Item Inventory Update (Date: #{Date.current.strftime('%d/%m/%Y')})" ]
+          sheet.add_row []
+          sheet.add_row [ "Sl No.", "Item Name", "Old Stock (#{yesterday})", "New Stock Added", "Qty", "Total Updated Stock" ]
+          sheet.add_row [ 1, "Tandoori", 12.5, 10, "Pcs", "22.5 Pcs" ]
+        end
+      end
+    end
+
+    def quantity_sample_template
+      build(filename: "hotel_sikkolu_quantities_sample.xlsx") do |workbook|
+        add_sheet(workbook, "Daily Quantities") do |sheet|
+          sheet.add_row [ "HOTEL SIKKOLU - Daily Opening Quantities (Date: #{Date.current.strftime('%d/%m/%Y')})" ]
+          sheet.add_row []
+          sheet.add_row [ "Item Name", "Quantity", "Unit" ]
+          sheet.add_row [ "Rice", 50, "kg" ]
         end
       end
     end
@@ -114,6 +138,12 @@ class XlsxExporter
 
     def date_stamp
       Date.current.strftime("%Y-%m-%d")
+    end
+
+    def number_format(value)
+      return "" if value.blank?
+
+      format("%.3f", value).sub(/\.?0+\z/, "")
     end
   end
 end

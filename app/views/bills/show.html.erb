@@ -1,0 +1,121 @@
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Table <%= @dining_table.name %></h5>
+        <small>
+          Bill <%= @bill.bill_number %> ·
+          <% if @bill.active? %>
+            <span class="text-hs-gold">Active</span>
+          <% else %>
+            Paid
+          <% end %>
+        </small>
+      </div>
+      <div class="hs-toolbar-actions">
+        <%= link_to root_path(tab: "bills"), class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+          <i class="bi bi-arrow-left"></i>
+          <span>All tables</span>
+        <% end %>
+        <% if @bill.paid? %>
+          <%= link_to bill_pdf_path(@bill), class: "btn btn-hs-gold btn-sm hs-action-btn", target: "_blank", rel: "noopener" do %>
+            <i class="bi bi-file-earmark-pdf"></i>
+            <span>Download PDF</span>
+          <% end %>
+        <% end %>
+        <% unless @bill.deleted? %>
+          <%= button_to delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger btn-sm hs-action-btn", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills and free the table if active." } } do %>
+            <i class="bi bi-trash"></i>
+            <span>Delete bill</span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <h6 class="text-hs-gold mb-3">Menu</h6>
+        <% if @bill.active? %>
+          <% @menu_items_by_category.each do |category, items| %>
+            <div class="hs-menu-category mb-3">
+              <div class="hs-menu-category-title"><%= category %></div>
+              <div class="hs-menu-list">
+                <% items.each do |item| %>
+                  <div class="hs-menu-row">
+                    <div>
+                      <div class="hs-menu-name"><%= item.name %></div>
+                      <div class="hs-menu-price">₹ <%= number_with_precision(item.price, precision: 2) %></div>
+                    </div>
+                    <%= button_to "Add", add_bill_item_path(@dining_table), method: :post, params: { menu_item_id: item.id }, class: "btn btn-hs-gold btn-sm" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="text-hs-muted">This bill is paid. Menu is locked.</p>
+        <% end %>
+      </div>
+
+      <div class="col-lg-5">
+        <h6 class="text-hs-gold mb-3">Current order</h6>
+        <% if @line_items.any? %>
+          <div class="table-responsive mb-3">
+            <table class="table hs-table align-middle">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Amount</th>
+                  <% if @bill.active? %><th></th><% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% @line_items.each do |line| %>
+                  <tr>
+                    <td>
+                      <div><%= line.item_name %></div>
+                      <small class="text-hs-muted">₹ <%= number_with_precision(line.unit_price, precision: 2) %> each</small>
+                    </td>
+                    <td>
+                      <% if @bill.active? %>
+                        <%= form_with url: update_bill_item_path(@bill, line), method: :patch, class: "hs-qty-form" do %>
+                          <%= number_field_tag :quantity, line.quantity, min: 1, class: "form-control form-control-sm hs-qty-input" %>
+                          <%= submit_tag "Set", class: "btn btn-hs-outline btn-sm" %>
+                        <% end %>
+                      <% else %>
+                        <%= line.quantity %>
+                      <% end %>
+                    </td>
+                    <td>₹ <%= number_with_precision(line.line_total, precision: 2) %></td>
+                    <% if @bill.active? %>
+                      <td class="text-end">
+                        <%= button_to "×", remove_bill_item_path(@bill, line), method: :delete, class: "btn btn-outline-danger btn-sm", form: { data: { turbo_confirm: "Remove #{line.item_name}?" } } %>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="hs-bill-total mb-3">
+            <span>Total</span>
+            <strong>₹ <%= number_with_precision(@bill.subtotal, precision: 2) %></strong>
+          </div>
+
+          <% if @bill.active? %>
+            <%= button_to pay_bill_path(@bill), method: :post, class: "btn btn-hs-gold w-100 mb-2", form: { data: { turbo_confirm: "Mark bill as paid and generate PDF?" } } do %>
+              Mark as Paid & Generate PDF
+            <% end %>
+            <%= button_to "Delete bill", delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger w-100", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills." } } %>
+          <% end %>
+        <% else %>
+          <p class="text-hs-muted mb-0">No items yet. Add food from the menu.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

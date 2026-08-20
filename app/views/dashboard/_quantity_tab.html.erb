@@ -1,28 +1,46 @@
 <div class="row g-3 g-md-4">
   <div class="col-lg-8">
     <div class="hs-card">
-      <div class="hs-card-header hs-card-header-stack">
-        <div class="hs-card-header-title">
-          <h5>Today's Quantities</h5>
-          <small><%= @inventory_date.strftime("%A, %d %B %Y") %></small>
-        </div>
-        <div class="hs-card-header-actions">
-          <% if @daily_inventory %>
-            <%= link_to export_quantities_path(inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" do %>
-              <i class="bi bi-download me-1"></i> Export Excel
+      <div class="hs-card-header">
+        <div class="hs-toolbar">
+          <div class="hs-toolbar-title">
+            <h5>Today's Quantities</h5>
+            <small><%= @inventory_date.strftime("%A, %d %B %Y") %></small>
+          </div>
+
+          <div class="hs-toolbar-actions">
+            <%= link_to quantity_sample_path, class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+              <i class="bi bi-file-earmark-arrow-down"></i>
+              <span>Sample Sheet</span>
             <% end %>
-          <% end %>
-          <%= form_with url: import_quantities_path, method: :post, multipart: true, class: "hs-inline-form" do |f| %>
-            <%= hidden_field_tag :inventory_date, @inventory_date %>
-            <%= f.file_field :file, accept: ".xlsx,.xls,.csv", class: "form-control form-control-sm", required: true %>
-            <%= f.submit "Upload Sheet", class: "btn btn-hs-gold btn-sm w-100 w-sm-auto" %>
-          <% end %>
+
+            <% if @daily_inventory %>
+              <%= link_to export_quantities_path(inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+                <i class="bi bi-download"></i>
+                <span>Export</span>
+              <% end %>
+            <% end %>
+
+            <%= form_with url: import_quantities_path, method: :post, multipart: true, class: "hs-upload-form" do |f| %>
+              <%= hidden_field_tag :inventory_date, @inventory_date %>
+              <label class="hs-file-picker">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <span class="hs-file-label" data-default="Choose Excel file">Choose Excel file</span>
+                <%= f.file_field :file,
+                      accept: ".xlsx,.xls,.csv",
+                      required: true,
+                      class: "hs-file-input",
+                      onchange: "this.closest('.hs-file-picker').querySelector('.hs-file-label').textContent = this.files[0] ? this.files[0].name : this.closest('.hs-file-picker').querySelector('.hs-file-label').dataset.default" %>
+              </label>
+              <%= f.submit "Upload", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+            <% end %>
+          </div>
         </div>
       </div>
 
       <div class="hs-card-body">
         <p class="text-hs-muted small mb-3">
-          Upload today's opening quantities (columns: <strong class="text-hs-gold">Item Name, Quantity, Unit</strong>).
+          Download the sample sheet (columns: <strong class="text-hs-gold">Item Name, Quantity, Unit</strong>), fill it, then upload.
           Record expenses below to subtract from available stock.
         </p>
 
@@ -31,13 +49,13 @@
             <div class="col-4">
               <div class="hs-stat-box">
                 <div class="hs-stat-label">Items</div>
-                <div class="hs-stat-value"><%= @daily_inventory.total_items %></div>
+                <div class="hs-stat-value"><%= @inventory_items.size %></div>
               </div>
             </div>
             <div class="col-4">
               <div class="hs-stat-box hs-stat-success">
                 <div class="hs-stat-label">Remaining</div>
-                <div class="hs-stat-value"><%= number_with_precision(@daily_inventory.total_remaining, precision: 2, strip_insignificant_zeros: true) %></div>
+                <div class="hs-stat-value"><%= number_with_precision(@inventory_items.sum(&:current_quantity), precision: 2, strip_insignificant_zeros: true) %></div>
               </div>
             </div>
             <div class="col-4">
@@ -48,80 +66,110 @@
             </div>
           </div>
 
-          <%= form_with url: root_path, method: :get, class: "hs-inline-form mb-3" do %>
+          <%= form_with url: root_path, method: :get, class: "hs-quantity-filters mb-3" do %>
             <%= hidden_field_tag :tab, "quantity" %>
-            <%= date_field_tag :inventory_date, @inventory_date, class: "form-control form-control-sm" %>
-            <%= submit_tag "View Date", class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" %>
+            <%= date_field_tag :inventory_date, @inventory_date, class: "form-control form-control-sm", title: "Date" %>
+            <%= text_field_tag :item_q, @quantity_item_q, class: "form-control form-control-sm", placeholder: "Filter item…" %>
+            <%= select_tag :unit,
+                  options_for_select([["All units", ""]] + @quantity_units.map { |u| [u, u] }, @quantity_unit),
+                  class: "form-select form-select-sm" %>
+            <%= select_tag :stock,
+                  options_for_select([
+                    ["All stock", ""],
+                    ["In stock", "in_stock"],
+                    ["Low stock", "low"],
+                    ["Out of stock", "out"]
+                  ], @quantity_stock),
+                  class: "form-select form-select-sm" %>
+            <%= submit_tag "Apply", class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+            <%= link_to "Clear", root_path(tab: "quantity", inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
           <% end %>
 
-          <div class="d-none d-md-block table-responsive">
-            <table class="table hs-table align-middle">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Opening</th>
-                  <th>Used</th>
-                  <th>Available</th>
-                  <th>Unit</th>
-                  <th>Record Expense</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @inventory_items.each do |item| %>
+          <% if @inventory_items.any? %>
+            <div class="d-none d-md-block table-responsive">
+              <table class="table hs-table align-middle">
+                <thead>
                   <tr>
-                    <td class="fw-semibold text-hs-gold"><%= item.item_name %></td>
-                    <td><%= number_with_precision(item.opening_quantity, precision: 2, strip_insignificant_zeros: true) %></td>
-                    <td class="text-hs-danger"><%= number_with_precision(item.total_used, precision: 2, strip_insignificant_zeros: true) %></td>
-                    <td class="text-hs-success fw-bold"><%= number_with_precision(item.current_quantity, precision: 2, strip_insignificant_zeros: true) %></td>
-                    <td><%= item.unit %></td>
-                    <td>
-                      <%= form_with url: add_quantity_expense_path, method: :post, class: "d-flex gap-1 flex-wrap" do %>
-                        <%= hidden_field_tag :inventory_item_id, item.id %>
-                        <%= hidden_field_tag :inventory_date, @inventory_date %>
-                        <%= number_field_tag :quantity_used, nil, step: 0.01, min: 0.01, class: "form-control form-control-sm", placeholder: "Qty", style: "width: 70px;", required: true %>
-                        <%= text_field_tag :notes, nil, class: "form-control form-control-sm", placeholder: "Note", style: "width: 100px;" %>
-                        <%= submit_tag "−", class: "btn btn-hs-danger btn-sm", title: "Subtract expense" %>
-                      <% end %>
-                    </td>
+                    <th>Item</th>
+                    <th>Opening</th>
+                    <th>Used</th>
+                    <th>Available</th>
+                    <th>Unit</th>
+                    <th>Record Expense</th>
                   </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  <% @inventory_items.each do |item| %>
+                    <tr>
+                      <td class="fw-semibold text-hs-gold"><%= item.item_name %></td>
+                      <td><%= number_with_precision(item.opening_quantity, precision: 2, strip_insignificant_zeros: true) %></td>
+                      <td class="text-hs-danger"><%= number_with_precision(item.total_used, precision: 2, strip_insignificant_zeros: true) %></td>
+                      <td class="text-hs-success fw-bold"><%= number_with_precision(item.current_quantity, precision: 2, strip_insignificant_zeros: true) %></td>
+                      <td><%= item.unit %></td>
+                      <td>
+                        <%= form_with url: add_quantity_expense_path, method: :post, class: "d-flex gap-1 flex-wrap" do %>
+                          <%= hidden_field_tag :inventory_item_id, item.id %>
+                          <%= hidden_field_tag :inventory_date, @inventory_date %>
+                          <%= hidden_field_tag :item_q, @quantity_item_q %>
+                          <%= hidden_field_tag :unit, @quantity_unit %>
+                          <%= hidden_field_tag :stock, @quantity_stock %>
+                          <%= number_field_tag :quantity_used, nil, step: 0.01, min: 0.01, class: "form-control form-control-sm", placeholder: "Qty", style: "width: 70px;", required: true %>
+                          <%= text_field_tag :notes, nil, class: "form-control form-control-sm", placeholder: "Note", style: "width: 100px;" %>
+                          <%= submit_tag "−", class: "btn btn-hs-danger btn-sm", title: "Subtract expense" %>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
 
-          <div class="d-md-none hs-mobile-cards">
-            <% @inventory_items.each do |item| %>
-              <div class="hs-mobile-card">
-                <div class="hs-mobile-card-header">
-                  <span class="hs-mobile-card-title"><%= item.item_name %></span>
-                  <span class="badge hs-badge-available"><%= number_with_precision(item.current_quantity, precision: 2, strip_insignificant_zeros: true) %> <%= item.unit %></span>
-                </div>
-                <dl class="hs-mobile-dl">
-                  <div><dt>Opening</dt><dd><%= number_with_precision(item.opening_quantity, precision: 2, strip_insignificant_zeros: true) %></dd></div>
-                  <div><dt>Used</dt><dd class="text-hs-danger"><%= number_with_precision(item.total_used, precision: 2, strip_insignificant_zeros: true) %></dd></div>
-                </dl>
-                <%= form_with url: add_quantity_expense_path, method: :post, class: "hs-expense-form mt-2" do %>
-                  <%= hidden_field_tag :inventory_item_id, item.id %>
-                  <%= hidden_field_tag :inventory_date, @inventory_date %>
-                  <div class="row g-2">
-                    <div class="col-6">
-                      <%= number_field_tag :quantity_used, nil, step: 0.01, min: 0.01, class: "form-control form-control-sm", placeholder: "Qty used", required: true %>
-                    </div>
-                    <div class="col-6">
-                      <%= text_field_tag :notes, nil, class: "form-control form-control-sm", placeholder: "Note" %>
-                    </div>
-                    <div class="col-12">
-                      <%= submit_tag "Record Expense", class: "btn btn-hs-danger btn-sm w-100" %>
-                    </div>
+            <div class="d-md-none hs-mobile-cards">
+              <% @inventory_items.each do |item| %>
+                <div class="hs-mobile-card">
+                  <div class="hs-mobile-card-header">
+                    <span class="hs-mobile-card-title"><%= item.item_name %></span>
+                    <span class="badge hs-badge-available"><%= number_with_precision(item.current_quantity, precision: 2, strip_insignificant_zeros: true) %> <%= item.unit %></span>
                   </div>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
+                  <dl class="hs-mobile-dl">
+                    <div><dt>Opening</dt><dd><%= number_with_precision(item.opening_quantity, precision: 2, strip_insignificant_zeros: true) %></dd></div>
+                    <div><dt>Used</dt><dd class="text-hs-danger"><%= number_with_precision(item.total_used, precision: 2, strip_insignificant_zeros: true) %></dd></div>
+                    <div><dt>Unit</dt><dd><%= item.unit %></dd></div>
+                  </dl>
+                  <%= form_with url: add_quantity_expense_path, method: :post, class: "hs-expense-form mt-2" do %>
+                    <%= hidden_field_tag :inventory_item_id, item.id %>
+                    <%= hidden_field_tag :inventory_date, @inventory_date %>
+                    <%= hidden_field_tag :item_q, @quantity_item_q %>
+                    <%= hidden_field_tag :unit, @quantity_unit %>
+                    <%= hidden_field_tag :stock, @quantity_stock %>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <%= number_field_tag :quantity_used, nil, step: 0.01, min: 0.01, class: "form-control form-control-sm", placeholder: "Qty used", required: true %>
+                      </div>
+                      <div class="col-6">
+                        <%= text_field_tag :notes, nil, class: "form-control form-control-sm", placeholder: "Note" %>
+                      </div>
+                      <div class="col-12">
+                        <%= submit_tag "Record Expense", class: "btn btn-hs-danger btn-sm w-100" %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-4 text-hs-muted">
+              <p class="mb-1">No items match these filters.</p>
+              <p class="small mb-0">Clear filters or upload a sheet for this date.</p>
+            </div>
+          <% end %>
         <% else %>
           <div class="text-center py-5 text-hs-muted">
             <p class="mb-1">No inventory uploaded for this date.</p>
-            <p class="small">Upload today's Excel sheet to begin tracking quantities.</p>
+            <p class="small mb-3">Download the sample sheet, fill it, then upload to begin tracking.</p>
+            <%= link_to quantity_sample_path, class: "btn btn-hs-gold btn-sm" do %>
+              <i class="bi bi-file-earmark-arrow-down"></i> Download Sample Sheet
+            <% end %>
           </div>
         <% end %>
       </div>

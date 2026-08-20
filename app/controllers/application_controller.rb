@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
+  before_action :authenticate_user!, unless: :devise_controller?
+
   private
 
   def parse_date(value)

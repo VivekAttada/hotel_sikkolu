@@ -1,60 +1,171 @@
+<% checklist_view = @checklist_view || "all" %>
+
 <div class="hs-card">
-  <div class="hs-card-header hs-card-header-stack">
-    <div class="hs-card-header-title">
-      <h5>Checklist</h5>
-      <small><%= @checklist_date.strftime("%A, %d %B %Y") %></small>
-    </div>
-    <div class="hs-card-header-actions hs-checklist-actions">
-      <% if @checklist_entries.any? %>
-        <%= link_to export_checklist_path(checklist_date: @checklist_date), class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" do %>
-          <i class="bi bi-download me-1"></i> Export Excel
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Checklist</h5>
+        <small>
+          Marks are saved for the selected date.
+          Viewing <%= @checklist_date.strftime("%A, %d %B %Y") %>.
+        </small>
+      </div>
+
+      <div class="hs-toolbar-actions hs-toolbar-actions-checklist">
+        <% if @checklist_entries.any? %>
+          <%= link_to export_checklist_path(checklist_date: @checklist_date), class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+            <i class="bi bi-download"></i>
+            <span>Export</span>
+          <% end %>
         <% end %>
-      <% end %>
-      <div class="progress hs-progress w-100">
-        <div class="progress-bar" role="progressbar" style="width: <%= @daily_checklist.completion_percentage %>%">
-          <%= @daily_checklist.completion_percentage %>%
+
+        <div class="progress hs-progress hs-progress-compact">
+          <div class="progress-bar" role="progressbar" style="width: <%= @daily_checklist.completion_percentage %>%">
+            <%= @daily_checklist.completion_percentage %>%
+          </div>
         </div>
       </div>
-      <%= form_with url: root_path, method: :get, class: "hs-inline-form w-100" do %>
-        <%= hidden_field_tag :tab, "checklist" %>
-        <%= date_field_tag :checklist_date, @checklist_date, class: "form-control form-control-sm" %>
-        <%= submit_tag "Go", class: "btn btn-hs-outline btn-sm w-100 w-sm-auto" %>
-      <% end %>
     </div>
   </div>
 
   <div class="hs-card-body">
-    <% if @checklist_entries.any? %>
-      <% ChecklistTask::FREQUENCIES.each do |frequency| %>
-        <% entries = @checklist_entries_by_frequency[frequency] || [] %>
-        <% next if entries.empty? %>
+    <%= form_with url: root_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <%= hidden_field_tag :tab, "checklist" %>
+      <%= hidden_field_tag :checklist_view, checklist_view %>
+      <label class="hs-bill-date-label" for="checklist_date">Checklist date</label>
+      <%= date_field_tag :checklist_date, @checklist_date, class: "form-control form-control-sm", id: "checklist_date", onchange: "this.form.requestSubmit()" %>
+      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% unless @checklist_date == Date.current %>
+        <%= link_to "Today", root_path(tab: "checklist", checklist_date: Date.current, checklist_view: checklist_view), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
 
-        <div class="checklist-section mb-4">
-          <div class="checklist-section-header">
-            <h6 class="checklist-section-title mb-0"><%= frequency.titleize %></h6>
-            <span class="checklist-section-count">
-              <%= entries.count { |e| e.checked } %> / <%= entries.size %> done
-            </span>
-          </div>
+    <div class="row g-3 mb-4">
+      <div class="col-4">
+        <div class="hs-stat-box">
+          <div class="hs-stat-label">Total tasks</div>
+          <div class="hs-stat-value"><%= @checklist_entries.size %></div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="hs-stat-box hs-stat-success">
+          <div class="hs-stat-label">Done</div>
+          <div class="hs-stat-value"><%= @checklist_done_count %></div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="hs-stat-box">
+          <div class="hs-stat-label">Pending</div>
+          <div class="hs-stat-value"><%= @checklist_pending_count %></div>
+        </div>
+      </div>
+    </div>
 
-          <div class="list-group list-group-flush hs-list-group">
-            <% entries.each do |entry| %>
-              <%= form_with url: checklist_entry_path(entry), method: :patch, class: "list-group-item list-group-item-action" do %>
-                <div class="form-check d-flex align-items-start gap-3 py-2 px-2">
-                  <%= check_box_tag :checked, "1", entry.checked,
-                        class: "form-check-input fs-5 mt-1 flex-shrink-0",
-                        onchange: "this.form.submit()" %>
-                  <label class="form-check-label flex-grow-1 <%= 'checked-item' if entry.checked %>">
-                    <%= entry.checklist_task.title %>
-                    <% if entry.checked_at %>
-                      <small class="d-block text-hs-success">Checked at <%= entry.checked_at.strftime("%I:%M %p") %></small>
-                    <% end %>
-                  </label>
-                </div>
+    <ul class="nav nav-pills hs-checklist-subnav mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <%= link_to root_path(tab: "checklist", checklist_date: @checklist_date, checklist_view: "all"),
+              class: "nav-link #{'active' if checklist_view == 'all'}" do %>
+          All tasks
+        <% end %>
+      </li>
+      <li class="nav-item" role="presentation">
+        <%= link_to root_path(tab: "checklist", checklist_date: @checklist_date, checklist_view: "pending"),
+              class: "nav-link #{'active' if checklist_view == 'pending'}" do %>
+          Pending
+          <% if @checklist_pending_count.positive? %>
+            <span class="badge rounded-pill hs-checklist-pending-count"><%= @checklist_pending_count %></span>
+          <% end %>
+        <% end %>
+      </li>
+    </ul>
+
+    <% show_select_all = checklist_view == "pending" ? @pending_checklist_entries.any? : @checklist_entries.any? %>
+    <% if show_select_all %>
+      <% all_selected = if checklist_view == "pending"
+            @pending_checklist_entries.empty?
+          else
+            @checklist_pending_count.zero? && @checklist_entries.any?
+          end %>
+      <%= form_with url: bulk_checklist_path, method: :patch, class: "hs-checklist-select-all mb-4" do %>
+        <%= hidden_field_tag :checklist_date, @checklist_date %>
+        <%= hidden_field_tag :checklist_view, checklist_view %>
+        <label class="hs-checklist-row mb-0" for="checklist_select_all">
+          <%= check_box_tag :checked, "1", all_selected,
+                id: "checklist_select_all",
+                class: "hs-checklist-checkbox",
+                onchange: "this.form.requestSubmit()" %>
+          <span class="hs-checklist-text">
+            <strong>Select all</strong>
+            <small class="d-block text-hs-muted">
+              <% if checklist_view == "pending" %>
+                Mark all pending tasks as done for this date
+              <% else %>
+                Mark every task as done for this date (uncheck to clear all)
               <% end %>
+            </small>
+          </span>
+        </label>
+      <% end %>
+    <% end %>
+
+    <% if @checklist_entries.any? %>
+      <% if checklist_view == "pending" %>
+        <% if @pending_checklist_entries.any? %>
+          <% daily_entries = @pending_entries_by_frequency["daily"] || [] %>
+          <% weekly_entries = @pending_entries_by_frequency["weekly"] || [] %>
+          <% monthly_entries = @pending_entries_by_frequency["monthly"] || [] %>
+
+          <div class="row g-3 checklist-top-row">
+            <% if daily_entries.any? %>
+              <div class="col-12 col-lg-6">
+                <%= render "dashboard/checklist_section", frequency: "daily", entries: daily_entries, checklist_view: checklist_view %>
+              </div>
+            <% end %>
+            <% if weekly_entries.any? %>
+              <div class="col-12 col-lg-6">
+                <%= render "dashboard/checklist_section", frequency: "weekly", entries: weekly_entries, checklist_view: checklist_view %>
+              </div>
             <% end %>
           </div>
+
+          <% if monthly_entries.any? %>
+            <div class="row g-3 checklist-bottom-row mt-1">
+              <div class="col-12">
+                <%= render "dashboard/checklist_section", frequency: "monthly", entries: monthly_entries, checklist_view: checklist_view %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="text-center py-5 text-hs-muted">
+            <p class="mb-1">Nothing pending for this date.</p>
+            <p class="small mb-0">All checklist tasks are marked done.</p>
+          </div>
+        <% end %>
+      <% else %>
+        <% daily_entries = @checklist_entries_by_frequency["daily"] || [] %>
+        <% weekly_entries = @checklist_entries_by_frequency["weekly"] || [] %>
+        <% monthly_entries = @checklist_entries_by_frequency["monthly"] || [] %>
+
+        <div class="row g-3 checklist-top-row">
+          <% if daily_entries.any? %>
+            <div class="col-12 col-lg-6">
+              <%= render "dashboard/checklist_section", frequency: "daily", entries: daily_entries, checklist_view: checklist_view %>
+            </div>
+          <% end %>
+          <% if weekly_entries.any? %>
+            <div class="col-12 col-lg-6">
+              <%= render "dashboard/checklist_section", frequency: "weekly", entries: weekly_entries, checklist_view: checklist_view %>
+            </div>
+          <% end %>
         </div>
+
+        <% if monthly_entries.any? %>
+          <div class="row g-3 checklist-bottom-row mt-1">
+            <div class="col-12">
+              <%= render "dashboard/checklist_section", frequency: "monthly", entries: monthly_entries, checklist_view: checklist_view %>
+            </div>
+          </div>
+        <% end %>
       <% end %>
     <% else %>
       <div class="text-center py-5 text-hs-muted">

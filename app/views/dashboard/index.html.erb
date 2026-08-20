@@ -16,6 +16,11 @@
       </button>
     </li>
     <li class="nav-item" role="presentation">
+      <button class="nav-link <%= 'active' if @active_tab == 'bills' %>" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills-panel" type="button" role="tab">
+        <i class="bi bi-receipt d-md-none me-1"></i>Bill Management
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link <%= 'active' if @active_tab == 'hotel_info' %>" id="hotel-info-tab" data-bs-toggle="tab" data-bs-target="#hotel-info-panel" type="button" role="tab">
         <i class="bi bi-info-circle d-md-none me-1"></i>Info
       </button>
@@ -32,6 +37,9 @@
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'quantity' %>" id="quantity-panel" role="tabpanel">
       <%= render "dashboard/quantity_tab" %>
     </div>
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'bills' %>" id="bills-panel" role="tabpanel">
+      <%= render "dashboard/bills_tab" %>
+    </div>
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'hotel_info' %>" id="hotel-info-panel" role="tabpanel">
       <%= render "dashboard/hotel_info_tab" %>
     </div>
@@ -41,7 +49,8 @@
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     const activeTab = "<%= @active_tab %>";
-    const tabButton = document.querySelector(`#${activeTab === 'hotel_info' ? 'hotel-info' : activeTab}-tab`);
+    const tabIdMap = { hotel_info: "hotel-info" };
+    const tabButton = document.querySelector(`#${tabIdMap[activeTab] || activeTab}-tab`);
     if (tabButton) {
       new bootstrap.Tab(tabButton).show();
     }

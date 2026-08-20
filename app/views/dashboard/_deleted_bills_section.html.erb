@@ -1,0 +1,36 @@
+<% if @deleted_bills.any? %>
+  <div class="table-responsive">
+    <table class="table hs-table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Bill</th>
+          <th>Table</th>
+          <th>Was</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Deleted at</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @deleted_bills.each do |bill| %>
+          <tr>
+            <td><%= bill.bill_number %></td>
+            <td><%= bill.dining_table.name %></td>
+            <td><%= bill.status.titleize %></td>
+            <td><%= bill.item_count %></td>
+            <td>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></td>
+            <td><%= bill.deleted_at&.strftime("%I:%M %p") %></td>
+            <td class="text-end">
+              <% if bill.status == "paid" %>
+                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-hs-muted small mb-0">No deleted bills for <%= @bill_date.strftime("%d %b %Y") %>.</p>
+<% end %>

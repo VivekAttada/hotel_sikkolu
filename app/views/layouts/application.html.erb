@@ -18,32 +18,39 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="hotel-sikkolu-body">
-    <nav class="navbar navbar-expand-lg hs-navbar shadow-sm">
-      <div class="container">
-        <a class="hs-navbar-brand" href="<%= root_path %>">
-          <%= image_tag "hotel_sikkolu_logo.png", alt: "Hotel Sikkolu Logo", class: "hs-logo" %>
-          <span class="hs-brand-text">
-            <span class="hs-brand-sub">Hotel</span>
-            <span class="hs-brand-name">Sikkolu</span>
-          </span>
-        </a>
-        <span class="navbar-text hs-navbar-tagline d-none d-md-inline ms-auto">
-          Daily grocery, checklist &amp; inventory management
-        </span>
-      </div>
-    </nav>
+  <body class="hotel-sikkolu-body <%= 'hs-auth-body' if devise_controller? %>">
+    <% unless devise_controller? %>
+      <nav class="navbar navbar-expand-lg hs-navbar shadow-sm">
+        <div class="container">
+          <a class="hs-navbar-brand" href="<%= root_path %>">
+            <%= image_tag "hotel_sikkolu_logo.png", alt: "Hotel Sikkolu Logo", class: "hs-logo" %>
+            <span class="hs-brand-text">
+              <span class="hs-brand-sub">Hotel</span>
+              <span class="hs-brand-name">Sikkolu</span>
+            </span>
+          </a>
+          <div class="d-flex align-items-center gap-3 ms-auto">
+            <span class="navbar-text hs-navbar-tagline d-none d-md-inline">
+              Daily grocery, checklist &amp; inventory management
+            </span>
+            <% if user_signed_in? %>
+              <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+            <% end %>
+          </div>
+        </div>
+      </nav>
+    <% end %>
 
-    <main class="container-fluid container-lg px-3 px-md-4 py-3 py-md-4">
+    <main class="<%= devise_controller? ? '' : 'container-fluid container-lg px-3 px-md-4 py-3 py-md-4' %>">
       <% if notice.present? %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show <%= 'mx-3 mt-3' if devise_controller? %>" role="alert">
           <%= notice %>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% end %>
 
       <% if alert.present? %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show <%= 'mx-3 mt-3' if devise_controller? %>" role="alert">
           <%= alert %>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -52,8 +59,10 @@
       <%= yield %>
     </main>
 
-    <footer class="text-center hs-footer">
-      <small>&copy; <%= Date.current.year %> Hotel Sikkolu — Bindu, Harish, Manoj &amp; Abhishek</small>
-    </footer>
+    <% unless devise_controller? %>
+      <footer class="text-center hs-footer">
+        <small>&copy; <%= Date.current.year %> Hotel Sikkolu — Bindu/Hareesh, Somnath, Manoj &amp; Abhishek</small>
+      </footer>
+    <% end %>
   </body>
 </html>

@@ -1,0 +1,32 @@
+<% checklist_view ||= "all" %>
+
+<div class="checklist-section h-100 mb-0">
+  <div class="checklist-section-header">
+    <h6 class="checklist-section-title mb-0"><%= frequency.titleize %></h6>
+    <span class="checklist-section-count">
+      <%= entries.count { |e| e.checked } %> / <%= entries.size %> done
+    </span>
+  </div>
+
+  <div class="list-group list-group-flush hs-list-group checklist-section-body">
+    <% entries.each do |entry| %>
+      <%= form_with url: checklist_entry_path(entry), method: :patch, class: "list-group-item list-group-item-action hs-checklist-item" do %>
+        <%= hidden_field_tag :checklist_view, checklist_view %>
+        <label class="hs-checklist-row" for="checklist_entry_<%= entry.id %>">
+          <%= check_box_tag :checked, "1", entry.checked,
+                id: "checklist_entry_#{entry.id}",
+                class: "hs-checklist-checkbox",
+                onchange: "this.form.requestSubmit()" %>
+          <span class="hs-checklist-text <%= 'checked-item' if entry.checked %>">
+            <%= entry.checklist_task.title %>
+            <% if entry.checked_at %>
+              <small class="d-block text-hs-success">Checked at <%= entry.checked_at.strftime("%I:%M %p") %> on <%= @checklist_date.strftime("%d %b %Y") %></small>
+            <% elsif !entry.checked %>
+              <small class="d-block text-hs-muted">Pending for <%= @checklist_date.strftime("%d %b %Y") %></small>
+            <% end %>
+          </span>
+        </label>
+      <% end %>
+    <% end %>
+  </div>
+</div>

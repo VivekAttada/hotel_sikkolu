@@ -1,0 +1,35 @@
+<% if bills.any? %>
+  <div class="table-responsive">
+    <table class="table hs-table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Bill</th>
+          <th>Table</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Paid at</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% bills.each do |bill| %>
+          <tr>
+            <td><%= bill.bill_number %></td>
+            <td><%= bill.dining_table.name %></td>
+            <td><%= bill.item_count %></td>
+            <td>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></td>
+            <td><%= bill.paid_at&.strftime("%I:%M %p") %></td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener" %>
+                <%= button_to "Delete", delete_bill_path(bill), method: :delete, class: "btn btn-outline-danger btn-sm", form: { data: { turbo_confirm: "Delete bill #{bill.bill_number}? It will move to Deleted Bills." } } %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-hs-muted small mb-0"><%= empty_message %></p>
+<% end %>

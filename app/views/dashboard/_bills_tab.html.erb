@@ -1,0 +1,78 @@
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Bill Management</h5>
+        <small>Tap a dining table to add items. Pick a date to see paid bills, totals, and deleted bills for that day.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <%= form_with url: root_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <%= hidden_field_tag :tab, "bills" %>
+      <label class="hs-bill-date-label" for="bill_date">Bill date</label>
+      <%= date_field_tag :bill_date, @bill_date, class: "form-control form-control-sm", id: "bill_date", onchange: "this.form.requestSubmit()" %>
+      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% unless @bill_date == Date.current %>
+        <%= link_to "Today", root_path(tab: "bills", bill_date: Date.current), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4">
+        <div class="hs-stat-box hs-stat-success">
+          <div class="hs-stat-label"><%= @bill_date == Date.current ? "Today's" : @bill_date.strftime("%d %b") %> total</div>
+          <div class="hs-stat-value">₹ <%= number_with_precision(@day_bills_sum, precision: 2) %></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4">
+        <div class="hs-stat-box">
+          <div class="hs-stat-label">Paid bills</div>
+          <div class="hs-stat-value"><%= @day_bills.size %></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="hs-stat-box">
+          <div class="hs-stat-label">Deleted that day</div>
+          <div class="hs-stat-value"><%= @deleted_bills.size %></div>
+        </div>
+      </div>
+    </div>
+
+    <h6 class="text-hs-gold mb-3">Dining tables</h6>
+    <div class="hs-dining-grid mb-4">
+      <% @dining_tables.each do |table| %>
+        <% bill = table.active_bill %>
+        <%= link_to bill_path(table), class: "hs-dining-table #{bill ? 'is-active' : 'is-free'}" do %>
+          <span class="hs-dining-name"><%= table.name %></span>
+          <% if bill %>
+            <span class="hs-dining-status">Active</span>
+            <span class="hs-dining-meta">₹ <%= number_with_precision(bill.subtotal, precision: 2) %></span>
+            <span class="hs-dining-meta"><%= pluralize(bill.item_count, "item") %></span>
+          <% else %>
+            <span class="hs-dining-status">Free</span>
+            <span class="hs-dining-meta">Tap to open bill</span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <h6 class="text-hs-gold mb-3">
+          Paid bills — <%= @bill_date == Date.current ? "Today" : @bill_date.strftime("%d %b %Y") %>
+        </h6>
+        <%= render "dashboard/bills_history",
+              bills: @day_bills,
+              empty_message: "No paid bills for #{@bill_date.strftime('%d %b %Y')}." %>
+      </div>
+      <div class="col-lg-6">
+        <h6 class="text-hs-gold mb-3">
+          Deleted bills — <%= @bill_date == Date.current ? "Today" : @bill_date.strftime("%d %b %Y") %>
+        </h6>
+        <%= render "dashboard/deleted_bills_section" %>
+      </div>
+    </div>
+  </div>
+</div>
