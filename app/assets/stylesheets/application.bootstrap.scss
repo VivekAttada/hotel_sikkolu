@@ -433,6 +433,18 @@ h1, h2, h3, h4, h5, h6,
 }
 
 // ── Alerts ────────────────────────────────────────────
+.hs-flash-stack {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 1080;
+  margin-bottom: 1rem;
+}
+
+.hs-flash {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-weight: 500;
+}
+
 .alert-success {
   background-color: rgba($success, 0.15);
   border-color: rgba($success, 0.4);
@@ -496,13 +508,49 @@ h1, h2, h3, h4, h5, h6,
 .checklist-section-count {
   color: $hs-cream-muted;
   font-size: 0.8rem;
+  letter-spacing: 0.04em;
 }
 
 .checklist-section {
-  background: rgba($hs-olive-dark, 0.35);
-  border: 1px solid rgba($hs-gold, 0.18);
+  background: transparent;
+  border: 1px solid rgba($hs-gold, 0.2);
   border-radius: 0.5rem;
-  padding: 0.75rem;
+  padding: 0;
+  overflow: hidden;
+
+  .hs-table {
+    margin-bottom: 0;
+
+    thead th {
+      border-bottom-color: rgba($hs-gold, 0.25);
+    }
+
+    tbody tr {
+      border-color: rgba($hs-gold, 0.18);
+    }
+
+    tbody td {
+      border-color: rgba($hs-gold, 0.18);
+      color: #ffffff !important;
+      background-color: transparent;
+    }
+  }
+
+  .hs-checklist-row {
+    color: #ffffff;
+  }
+
+  .hs-checklist-text {
+    color: #ffffff;
+
+    &.checked-item {
+      color: $hs-cream-muted;
+    }
+
+    small {
+      color: inherit;
+    }
+  }
 }
 
 .checklist-section-body {
@@ -1008,13 +1056,20 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .hs-checklist-select-all {
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba($hs-gold, 0.3);
-  border-radius: 0.55rem;
-  background: rgba($hs-gold, 0.08);
+  padding: 0;
+  border: 1px solid rgba($hs-gold, 0.2);
+  border-radius: 0.5rem;
+  background: transparent;
+  overflow: hidden;
 
   .hs-checklist-row {
     cursor: pointer;
+    color: #ffffff;
+    border-bottom: 1px solid rgba($hs-gold, 0.18);
+  }
+
+  .hs-checklist-text {
+    color: #ffffff;
   }
 }
 
@@ -1092,6 +1147,12 @@ h1, h2, h3, h4, h5, h6,
   letter-spacing: 0.06em;
   color: $hs-gold;
   margin-bottom: 0.5rem;
+}
+
+.hs-menu-category-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .hs-menu-list {

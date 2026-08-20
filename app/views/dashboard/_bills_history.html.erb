@@ -21,7 +21,7 @@
             <td><%= bill.paid_at&.strftime("%I:%M %p") %></td>
             <td class="text-end">
               <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
-                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener" %>
+                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
                 <%= button_to "Delete", delete_bill_path(bill), method: :delete, class: "btn btn-outline-danger btn-sm", form: { data: { turbo_confirm: "Delete bill #{bill.bill_number}? It will move to Deleted Bills." } } %>
               </div>
             </td>

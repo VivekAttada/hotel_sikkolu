@@ -16,12 +16,12 @@
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "hs-login-form" }) do |f| %>
       <div class="mb-3">
         <%= f.label :username, "Username", class: "form-label" %>
-        <%= f.text_field :username, autofocus: true, autocomplete: "username", class: "form-control", required: true, placeholder: "hotel_sikkolu" %>
+        <%= f.text_field :username, autofocus: true, autocomplete: "username", class: "form-control", required: true %>
       </div>
 
       <div class="mb-3">
         <%= f.label :password, class: "form-label" %>
-        <%= f.password_field :password, autocomplete: "current-password", class: "form-control", required: true, placeholder: "••••••••" %>
+        <%= f.password_field :password, autocomplete: "current-password", class: "form-control", required: true %>
       </div>
 
       <% if devise_mapping.rememberable? %>

@@ -2,12 +2,17 @@ Rails.application.routes.draw do
   devise_for :users, skip: [ :registrations ]
   get "up" => "rails/health#show", as: :rails_health_check
 
-  root "dashboard#index"
+  root "dashboard#grocery"
+  get "grocery", to: "dashboard#grocery", as: :grocery
+  get "checklist", to: "dashboard#checklist", as: :checklist
+  get "quantities", to: "dashboard#quantities", as: :quantities
+  get "bills", to: "dashboard#bills", as: :bills
 
   post "groceries/import", to: "groceries#import", as: :import_groceries
   get "groceries/sample", to: "groceries#sample", as: :grocery_sample
   post "groceries", to: "groceries#create", as: :groceries
   patch "groceries/:id", to: "groceries#update", as: :grocery_item
+  post "groceries/:id/issue", to: "groceries#issue", as: :issue_grocery_item
   delete "groceries/:id", to: "groceries#destroy"
   patch "checklists/bulk", to: "checklists#bulk_update", as: :bulk_checklist
   patch "checklists/:id", to: "checklists#update", as: :checklist_entry
@@ -18,8 +23,6 @@ Rails.application.routes.draw do
   get "exports/grocery", to: "exports#grocery", as: :export_grocery
   get "exports/checklist", to: "exports#checklist", as: :export_checklist
   get "exports/quantities", to: "exports#quantities", as: :export_quantities
-  get "exports/team_members", to: "exports#team_members", as: :export_team_members
-
   get "bills/tables/:id", to: "bills#show", as: :bill
   post "bills/tables/:id/items", to: "bills#add_item", as: :add_bill_item
   patch "bills/:id/items/:line_item_id", to: "bills#update_item", as: :update_bill_item

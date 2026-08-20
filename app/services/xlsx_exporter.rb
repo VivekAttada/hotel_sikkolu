@@ -8,7 +8,7 @@ class XlsxExporter
         add_sheet(workbook, "Grocery Inventory") do |sheet|
           sheet.add_row [ "HOTEL SIKKOLU - Chicken & Item Inventory Update (Date: #{Date.current.strftime('%d/%m/%Y')})" ]
           sheet.add_row []
-          sheet.add_row [ "Sl No.", "Item Name", "Old Stock (#{yesterday})", "New Stock Added", "Qty", "Total Updated Stock" ]
+          sheet.add_row [ "Sl No.", "Item Name", "Old Stock (#{yesterday})", "New Stock Added", "Qty", "Total Updated Stock", "Issued", "Total" ]
           items.each_with_index do |item, index|
             sheet.add_row [
               item.serial_no.presence || (index + 1),
@@ -16,7 +16,9 @@ class XlsxExporter
               item.old_stock,
               item.new_stock_added,
               item.unit,
-              "#{number_format(item.quantity)} #{item.unit}".strip
+              "#{number_format(item.quantity)} #{item.unit}".strip,
+              "#{number_format(item.issued)} #{item.unit}".strip,
+              "#{number_format(item.available_total)} #{item.unit}".strip
             ]
           end
         end
@@ -30,8 +32,8 @@ class XlsxExporter
         add_sheet(workbook, "Inventory Update") do |sheet|
           sheet.add_row [ "HOTEL SIKKOLU - Chicken & Item Inventory Update (Date: #{Date.current.strftime('%d/%m/%Y')})" ]
           sheet.add_row []
-          sheet.add_row [ "Sl No.", "Item Name", "Old Stock (#{yesterday})", "New Stock Added", "Qty", "Total Updated Stock" ]
-          sheet.add_row [ 1, "Tandoori", 12.5, 10, "Pcs", "22.5 Pcs" ]
+          sheet.add_row [ "Sl No.", "Item Name", "Old Stock (#{yesterday})", "New Stock Added", "Qty", "Total Updated Stock", "Issued", "Total" ]
+          sheet.add_row [ 1, "Tandoori", 12.5, 10, "Pcs", "22.5 Pcs", "2", "20.5 Pcs" ]
         end
       end
     end

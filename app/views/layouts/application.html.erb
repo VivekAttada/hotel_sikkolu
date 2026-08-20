@@ -42,17 +42,21 @@
     <% end %>
 
     <main class="<%= devise_controller? ? '' : 'container-fluid container-lg px-3 px-md-4 py-3 py-md-4' %>">
-      <% if notice.present? %>
-        <div class="alert alert-success alert-dismissible fade show <%= 'mx-3 mt-3' if devise_controller? %>" role="alert">
-          <%= notice %>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      <% end %>
+      <% if notice.present? || alert.present? %>
+        <div class="hs-flash-stack <%= 'mx-3 mt-3' if devise_controller? %>" data-controller="flash" data-turbo-temporary>
+          <% if notice.present? %>
+            <div class="alert alert-success alert-dismissible fade show hs-flash" role="alert">
+              <%= notice %>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
 
-      <% if alert.present? %>
-        <div class="alert alert-danger alert-dismissible fade show <%= 'mx-3 mt-3' if devise_controller? %>" role="alert">
-          <%= alert %>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+          <% if alert.present? %>
+            <div class="alert alert-danger alert-dismissible fade show hs-flash" role="alert">
+              <%= alert %>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
         </div>
       <% end %>
 
@@ -61,7 +65,7 @@
 
     <% unless devise_controller? %>
       <footer class="text-center hs-footer">
-        <small>&copy; <%= Date.current.year %> Hotel Sikkolu — Bindu/Hareesh, Somnath, Manoj &amp; Abhishek</small>
+        <small>&copy; <%= Date.current.year %> Hotel Sikkolu</small>
       </footer>
     <% end %>
   </body>

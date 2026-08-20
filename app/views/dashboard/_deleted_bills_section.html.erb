@@ -23,7 +23,7 @@
             <td><%= bill.deleted_at&.strftime("%I:%M %p") %></td>
             <td class="text-end">
               <% if bill.status == "paid" %>
-                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener" %>
+                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
               <% end %>
             </td>
           </tr>

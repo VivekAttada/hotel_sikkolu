@@ -9,13 +9,12 @@
   </div>
 
   <div class="hs-card-body">
-    <%= form_with url: root_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
-      <%= hidden_field_tag :tab, "bills" %>
+    <%= form_with url: bills_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
       <label class="hs-bill-date-label" for="bill_date">Bill date</label>
       <%= date_field_tag :bill_date, @bill_date, class: "form-control form-control-sm", id: "bill_date", onchange: "this.form.requestSubmit()" %>
       <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
       <% unless @bill_date == Date.current %>
-        <%= link_to "Today", root_path(tab: "bills", bill_date: Date.current), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+        <%= link_to "Today", bills_path(bill_date: Date.current), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
       <% end %>
     <% end %>
 

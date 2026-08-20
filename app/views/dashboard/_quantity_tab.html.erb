@@ -9,16 +9,9 @@
           </div>
 
           <div class="hs-toolbar-actions">
-            <%= link_to quantity_sample_path, class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+            <%= link_to quantity_sample_path, class: "btn btn-hs-outline btn-sm hs-action-btn", data: { turbo: false } do %>
               <i class="bi bi-file-earmark-arrow-down"></i>
               <span>Sample Sheet</span>
-            <% end %>
-
-            <% if @daily_inventory %>
-              <%= link_to export_quantities_path(inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
-                <i class="bi bi-download"></i>
-                <span>Export</span>
-              <% end %>
             <% end %>
 
             <%= form_with url: import_quantities_path, method: :post, multipart: true, class: "hs-upload-form" do |f| %>
@@ -34,16 +27,18 @@
               </label>
               <%= f.submit "Upload", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
             <% end %>
+
+            <% if @daily_inventory %>
+              <%= link_to export_quantities_path(inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm hs-action-btn", data: { turbo: false } do %>
+                <i class="bi bi-download"></i>
+                <span>Export</span>
+              <% end %>
+            <% end %>
           </div>
         </div>
       </div>
 
       <div class="hs-card-body">
-        <p class="text-hs-muted small mb-3">
-          Download the sample sheet (columns: <strong class="text-hs-gold">Item Name, Quantity, Unit</strong>), fill it, then upload.
-          Record expenses below to subtract from available stock.
-        </p>
-
         <% if @daily_inventory %>
           <div class="row mb-3 g-2">
             <div class="col-4">
@@ -66,8 +61,7 @@
             </div>
           </div>
 
-          <%= form_with url: root_path, method: :get, class: "hs-quantity-filters mb-3" do %>
-            <%= hidden_field_tag :tab, "quantity" %>
+          <%= form_with url: quantities_path, method: :get, class: "hs-quantity-filters mb-3" do %>
             <%= date_field_tag :inventory_date, @inventory_date, class: "form-control form-control-sm", title: "Date" %>
             <%= text_field_tag :item_q, @quantity_item_q, class: "form-control form-control-sm", placeholder: "Filter item…" %>
             <%= select_tag :unit,
@@ -82,7 +76,7 @@
                   ], @quantity_stock),
                   class: "form-select form-select-sm" %>
             <%= submit_tag "Apply", class: "btn btn-hs-outline btn-sm hs-action-btn" %>
-            <%= link_to "Clear", root_path(tab: "quantity", inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+            <%= link_to "Clear", quantities_path(inventory_date: @inventory_date), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
           <% end %>
 
           <% if @inventory_items.any? %>
@@ -167,7 +161,7 @@
           <div class="text-center py-5 text-hs-muted">
             <p class="mb-1">No inventory uploaded for this date.</p>
             <p class="small mb-3">Download the sample sheet, fill it, then upload to begin tracking.</p>
-            <%= link_to quantity_sample_path, class: "btn btn-hs-gold btn-sm" do %>
+            <%= link_to quantity_sample_path, class: "btn btn-hs-gold btn-sm", data: { turbo: false } do %>
               <i class="bi bi-file-earmark-arrow-down"></i> Download Sample Sheet
             <% end %>
           </div>

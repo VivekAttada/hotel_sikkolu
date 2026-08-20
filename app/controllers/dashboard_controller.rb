@@ -1,13 +1,66 @@
 class DashboardController < ApplicationController
-  def index
-    @active_tab = params[:tab] || "grocery"
-    @active_tab = "bills" if @active_tab == "deleted_bills"
+  before_action :redirect_legacy_tab_param
+
+  def grocery
+    @active_tab = "grocery"
+    load_grocery_data
+    render :index
+  end
+
+  def checklist
+    @active_tab = "checklist"
+    load_checklist_data
+    render :index
+  end
+
+  def quantities
+    @active_tab = "quantity"
+    load_quantity_data
+    render :index
+  end
+
+  def bills
+    @active_tab = "bills"
+    load_bills_data
+    render :index
+  end
+
+  private
+
+  def redirect_legacy_tab_param
+    tab = params[:tab].to_s
+    return if tab.blank?
+
+    query = request.query_parameters.except("tab")
+    path = case tab
+    when "checklist"
+      checklist_path(query)
+    when "quantity"
+      quantities_path(query)
+    when "bills", "deleted_bills"
+      bills_path(query)
+    when "grocery", "hotel_info"
+      grocery_path(query.except("tab"))
+    else
+      grocery_path
+    end
+
+    redirect_to path, status: :moved_permanently
+  end
+
+  def load_grocery_data
+    @grocery_q = params[:grocery_q].to_s.strip
     @grocery_items = GroceryItem.recent_first
+    @grocery_items = @grocery_items.where("LOWER(item_name) LIKE ?", "%#{@grocery_q.downcase}%") if @grocery_q.present?
+    @grocery_has_items = GroceryItem.exists?
     @last_grocery_import = GroceryItem.maximum(:imported_at)
     @editing_grocery = GroceryItem.find_by(id: params[:edit_grocery]) if params[:edit_grocery].present?
     @new_grocery_item = GroceryItem.new
+  end
 
+  def load_checklist_data
     @checklist_date = parse_date(params[:checklist_date]) || Date.current
+    @checklist_date = Date.current if @checklist_date > Date.current
     @checklist_view = params[:checklist_view].presence
     @checklist_view = "all" unless %w[all pending].include?(@checklist_view)
     @daily_checklist = DailyChecklist.ensure_entries_for(@checklist_date)
@@ -21,7 +74,9 @@ class DashboardController < ApplicationController
     @pending_entries_by_frequency = @pending_checklist_entries.group_by { |entry| entry.checklist_task.frequency }
     @checklist_done_count = @checklist_entries.count(&:checked)
     @checklist_pending_count = @pending_checklist_entries.size
+  end
 
+  def load_quantity_data
     @inventory_date = parse_date(params[:inventory_date]) || Date.current
     @daily_inventory = DailyInventory.for_date(@inventory_date)
     @quantity_item_q = params[:item_q].to_s.strip
@@ -41,17 +96,15 @@ class DashboardController < ApplicationController
     else
       QuantityExpense.none
     end
+  end
 
-    @team_members = TeamMember.ordered
-
+  def load_bills_data
     @dining_tables = DiningTable.ordered.includes(:bills)
     @bill_date = parse_date(params[:bill_date]) || Date.current
     @day_bills = Bill.for_day(@bill_date).includes(:dining_table, :bill_line_items).recent_first
     @day_bills_sum = @day_bills.sum(:subtotal)
     @deleted_bills = Bill.deleted_on(@bill_date).includes(:dining_table, :bill_line_items).recently_deleted
   end
-
-  private
 
   def filtered_inventory_items
     return InventoryItem.none unless @daily_inventory
@@ -74,13 +127,5 @@ class DashboardController < ApplicationController
     end
 
     items
-  end
-
-  def parse_date(value)
-    return if value.blank?
-
-    Date.parse(value)
-  rescue ArgumentError
-    nil
   end
 end

@@ -13,12 +13,12 @@
         </small>
       </div>
       <div class="hs-toolbar-actions">
-        <%= link_to root_path(tab: "bills"), class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+        <%= link_to bills_path, class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
           <i class="bi bi-arrow-left"></i>
           <span>All tables</span>
         <% end %>
         <% if @bill.paid? %>
-          <%= link_to bill_pdf_path(@bill), class: "btn btn-hs-gold btn-sm hs-action-btn", target: "_blank", rel: "noopener" do %>
+          <%= link_to bill_pdf_path(@bill), class: "btn btn-hs-gold btn-sm hs-action-btn", target: "_blank", rel: "noopener", data: { turbo: false } do %>
             <i class="bi bi-file-earmark-pdf"></i>
             <span>Download PDF</span>
           <% end %>
@@ -38,9 +38,18 @@
       <div class="col-lg-7">
         <h6 class="text-hs-gold mb-3">Menu</h6>
         <% if @bill.active? %>
-          <% @menu_items_by_category.each do |category, items| %>
+          <% if @menu_categories.any? %>
+            <div class="hs-menu-category-nav mb-3">
+              <% @menu_categories.each do |category| %>
+                <%= link_to category,
+                      bill_path(@dining_table, menu_category: category),
+                      class: "btn btn-sm hs-action-btn #{@selected_menu_category == category ? 'btn-hs-gold' : 'btn-hs-outline'}" %>
+              <% end %>
+            </div>
+
+            <% items = @menu_items_by_category[@selected_menu_category] || [] %>
             <div class="hs-menu-category mb-3">
-              <div class="hs-menu-category-title"><%= category %></div>
+              <div class="hs-menu-category-title"><%= @selected_menu_category %></div>
               <div class="hs-menu-list">
                 <% items.each do |item| %>
                   <div class="hs-menu-row">
@@ -48,11 +57,17 @@
                       <div class="hs-menu-name"><%= item.name %></div>
                       <div class="hs-menu-price">₹ <%= number_with_precision(item.price, precision: 2) %></div>
                     </div>
-                    <%= button_to "Add", add_bill_item_path(@dining_table), method: :post, params: { menu_item_id: item.id }, class: "btn btn-hs-gold btn-sm" %>
+                    <%= button_to "Add",
+                          add_bill_item_path(@dining_table),
+                          method: :post,
+                          params: { menu_item_id: item.id, menu_category: @selected_menu_category },
+                          class: "btn btn-hs-gold btn-sm" %>
                   </div>
                 <% end %>
               </div>
             </div>
+          <% else %>
+            <p class="text-hs-muted">No menu items available.</p>
           <% end %>
         <% else %>
           <p class="text-hs-muted">This bill is paid. Menu is locked.</p>
@@ -82,6 +97,7 @@
                     <td>
                       <% if @bill.active? %>
                         <%= form_with url: update_bill_item_path(@bill, line), method: :patch, class: "hs-qty-form" do %>
+                          <%= hidden_field_tag :menu_category, @selected_menu_category %>
                           <%= number_field_tag :quantity, line.quantity, min: 1, class: "form-control form-control-sm hs-qty-input" %>
                           <%= submit_tag "Set", class: "btn btn-hs-outline btn-sm" %>
                         <% end %>
@@ -92,7 +108,12 @@
                     <td>₹ <%= number_with_precision(line.line_total, precision: 2) %></td>
                     <% if @bill.active? %>
                       <td class="text-end">
-                        <%= button_to "×", remove_bill_item_path(@bill, line), method: :delete, class: "btn btn-outline-danger btn-sm", form: { data: { turbo_confirm: "Remove #{line.item_name}?" } } %>
+                        <%= button_to "×",
+                              remove_bill_item_path(@bill, line),
+                              method: :delete,
+                              params: { menu_category: @selected_menu_category },
+                              class: "btn btn-outline-danger btn-sm",
+                              form: { data: { turbo_confirm: "Remove #{line.item_name}?" } } %>
                       </td>
                     <% end %>
                   </tr>

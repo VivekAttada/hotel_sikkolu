@@ -12,31 +12,30 @@
       </div>
 
       <div class="hs-toolbar-actions hs-toolbar-actions-checklist">
-        <% if @checklist_entries.any? %>
-          <%= link_to export_checklist_path(checklist_date: @checklist_date), class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
-            <i class="bi bi-download"></i>
-            <span>Export</span>
-          <% end %>
-        <% end %>
-
         <div class="progress hs-progress hs-progress-compact">
           <div class="progress-bar" role="progressbar" style="width: <%= @daily_checklist.completion_percentage %>%">
             <%= @daily_checklist.completion_percentage %>%
           </div>
         </div>
+
+        <% if @checklist_entries.any? %>
+          <%= link_to export_checklist_path(checklist_date: @checklist_date), class: "btn btn-hs-outline btn-sm hs-action-btn", data: { turbo: false } do %>
+            <i class="bi bi-download"></i>
+            <span>Export</span>
+          <% end %>
+        <% end %>
       </div>
     </div>
   </div>
 
   <div class="hs-card-body">
-    <%= form_with url: root_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
-      <%= hidden_field_tag :tab, "checklist" %>
+    <%= form_with url: checklist_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
       <%= hidden_field_tag :checklist_view, checklist_view %>
       <label class="hs-bill-date-label" for="checklist_date">Checklist date</label>
-      <%= date_field_tag :checklist_date, @checklist_date, class: "form-control form-control-sm", id: "checklist_date", onchange: "this.form.requestSubmit()" %>
+      <%= date_field_tag :checklist_date, @checklist_date, class: "form-control form-control-sm", id: "checklist_date", max: Date.current, onchange: "this.form.requestSubmit()" %>
       <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
       <% unless @checklist_date == Date.current %>
-        <%= link_to "Today", root_path(tab: "checklist", checklist_date: Date.current, checklist_view: checklist_view), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+        <%= link_to "Today", checklist_path(checklist_date: Date.current, checklist_view: checklist_view), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
       <% end %>
     <% end %>
 
@@ -63,13 +62,13 @@
 
     <ul class="nav nav-pills hs-checklist-subnav mb-3" role="tablist">
       <li class="nav-item" role="presentation">
-        <%= link_to root_path(tab: "checklist", checklist_date: @checklist_date, checklist_view: "all"),
+        <%= link_to checklist_path(checklist_date: @checklist_date, checklist_view: "all"),
               class: "nav-link #{'active' if checklist_view == 'all'}" do %>
           All tasks
         <% end %>
       </li>
       <li class="nav-item" role="presentation">
-        <%= link_to root_path(tab: "checklist", checklist_date: @checklist_date, checklist_view: "pending"),
+        <%= link_to checklist_path(checklist_date: @checklist_date, checklist_view: "pending"),
               class: "nav-link #{'active' if checklist_view == 'pending'}" do %>
           Pending
           <% if @checklist_pending_count.positive? %>

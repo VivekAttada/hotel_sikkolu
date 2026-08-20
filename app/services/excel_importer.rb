@@ -28,7 +28,9 @@ class ExcelImporter
     "unit" => :unit,
     "total updated stock" => :quantity,
     "total stock" => :quantity,
-    "quantity" => :quantity
+    "quantity" => :quantity,
+    "issued" => :issued,
+    "issue" => :issued
   }.freeze
 
   def self.parse(file)
@@ -89,6 +91,7 @@ class ExcelImporter
     return :old_stock if normalized.start_with?("old stock")
     return :new_stock_added if normalized.start_with?("new stock")
     return :quantity if normalized.start_with?("total updated") || normalized.start_with?("total stock")
+    return :issued if normalized == "issued" || normalized == "issue"
     return :serial_no if normalized.match?(/\A(sl\.?\s*no|s\.?\s*no|serial)/)
     return :unit if grocery && normalized == "qty"
 
@@ -130,7 +133,7 @@ class ExcelImporter
     return nil if text.blank? || text == "-" || text == "—"
 
     case key
-    when :quantity, :opening_quantity, :old_stock, :new_stock_added, :price
+    when :quantity, :opening_quantity, :old_stock, :new_stock_added, :price, :issued
       # Keep leading number from values like "22.5 Pcs (22 ½)"
       numeric = text[/\d+(?:\.\d+)?/]
       numeric.present? ? numeric.to_d : 0

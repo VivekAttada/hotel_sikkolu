@@ -11,16 +11,9 @@
       </div>
 
       <div class="hs-toolbar-actions">
-        <%= link_to grocery_sample_path, class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
+        <%= link_to grocery_sample_path, class: "btn btn-hs-outline btn-sm hs-action-btn", data: { turbo: false } do %>
           <i class="bi bi-file-earmark-arrow-down"></i>
           <span>Sample Sheet</span>
-        <% end %>
-
-        <% if @grocery_items.any? %>
-          <%= link_to export_grocery_path, class: "btn btn-hs-outline btn-sm hs-action-btn" do %>
-            <i class="bi bi-download"></i>
-            <span>Export</span>
-          <% end %>
         <% end %>
 
         <%= form_with url: import_groceries_path, method: :post, multipart: true, class: "hs-upload-form" do |f| %>
@@ -35,16 +28,26 @@
           </label>
           <%= f.submit "Upload", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
         <% end %>
+
+        <% if @grocery_has_items %>
+          <%= link_to export_grocery_path, class: "btn btn-hs-outline btn-sm hs-action-btn", data: { turbo: false } do %>
+            <i class="bi bi-download"></i>
+            <span>Export</span>
+          <% end %>
+        <% end %>
       </div>
     </div>
   </div>
 
   <div class="hs-card-body">
-    <p class="text-hs-muted small mb-3">
-      Use the client sheet format:
-      <strong class="text-hs-gold">Sl No., Item Name, Old Stock, New Stock Added, Qty, Total Updated Stock</strong>.
-      You can also add, edit, or delete items below. Total updates automatically as Old Stock + New Stock Added.
-    </p>
+    <%= form_with url: grocery_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <label class="hs-bill-date-label" for="grocery_q">Search item</label>
+      <%= text_field_tag :grocery_q, @grocery_q, class: "form-control form-control-sm", id: "grocery_q", placeholder: "Item name" %>
+      <%= submit_tag "Search", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% if @grocery_q.present? %>
+        <%= link_to "Clear", grocery_path, class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
 
     <div class="hs-grocery-add mb-4">
       <h6 class="text-hs-gold mb-3">Add grocery item</h6>
@@ -88,6 +91,8 @@
               <th>New Stock Added</th>
               <th>Qty</th>
               <th>Total Updated Stock</th>
+              <th>Issued</th>
+              <th>Total</th>
               <th class="text-end">Actions</th>
             </tr>
           </thead>
@@ -95,22 +100,22 @@
             <% @grocery_items.each_with_index do |item, index| %>
               <% if @editing_grocery&.id == item.id %>
                 <tr class="hs-grocery-edit-row">
-                  <td colspan="7">
+                  <td colspan="9">
                     <%= form_with model: item, url: grocery_item_path(item), method: :patch, class: "hs-grocery-form" do |f| %>
                       <div class="row g-2 align-items-end">
                         <div class="col-md-1">
                           <%= f.label :serial_no, "Sl No.", class: "form-label small mb-1" %>
                           <%= f.number_field :serial_no, class: "form-control form-control-sm", min: 1 %>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                           <%= f.label :item_name, "Item Name", class: "form-label small mb-1" %>
                           <%= f.text_field :item_name, class: "form-control form-control-sm", required: true %>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                           <%= f.label :old_stock, "Old Stock", class: "form-label small mb-1" %>
                           <%= f.number_field :old_stock, class: "form-control form-control-sm", step: 0.001 %>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                           <%= f.label :new_stock_added, "New Stock", class: "form-label small mb-1" %>
                           <%= f.number_field :new_stock_added, class: "form-control form-control-sm", step: 0.001 %>
                         </div>
@@ -118,9 +123,13 @@
                           <%= f.label :unit, "Unit", class: "form-label small mb-1" %>
                           <%= f.text_field :unit, class: "form-control form-control-sm" %>
                         </div>
-                        <div class="col-md-3 d-flex gap-2">
+                        <div class="col-md-2">
+                          <%= f.label :issued, "Issued (total)", class: "form-label small mb-1" %>
+                          <%= f.number_field :issued, class: "form-control form-control-sm", step: 0.001, min: 0 %>
+                        </div>
+                        <div class="col-md-4 d-flex gap-2">
                           <%= f.submit "Save", class: "btn btn-hs-gold btn-sm" %>
-                          <%= link_to "Cancel", root_path(tab: "grocery"), class: "btn btn-hs-outline btn-sm" %>
+                          <%= link_to "Cancel", grocery_path(grocery_q: @grocery_q.presence), class: "btn btn-hs-outline btn-sm" %>
                         </div>
                       </div>
                     <% end %>
@@ -137,9 +146,25 @@
                     <%= number_with_precision(item.quantity, precision: 3, strip_insignificant_zeros: true) %>
                     <%= item.unit %>
                   </td>
+                  <td>
+                    <div class="d-flex flex-column gap-1">
+                      <span>
+                        <%= number_with_precision(item.issued, precision: 3, strip_insignificant_zeros: true) %>
+                        <%= item.unit %>
+                      </span>
+                      <%= form_with url: issue_grocery_item_path(item), method: :post, class: "hs-issue-form d-flex gap-1 align-items-center" do %>
+                        <%= number_field_tag :issue_qty, nil, class: "form-control form-control-sm", step: 0.001, min: 0.001, placeholder: "Issue", style: "width: 5.5rem", required: true %>
+                        <%= submit_tag "Issue", class: "btn btn-hs-outline btn-sm" %>
+                      <% end %>
+                    </div>
+                  </td>
+                  <td class="fw-semibold text-hs-gold">
+                    <%= number_with_precision(item.available_total, precision: 3, strip_insignificant_zeros: true) %>
+                    <%= item.unit %>
+                  </td>
                   <td class="text-end">
                     <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
-                      <%= link_to "Edit", root_path(tab: "grocery", edit_grocery: item.id), class: "btn btn-hs-outline btn-sm" %>
+                      <%= link_to "Edit", grocery_path(edit_grocery: item.id, grocery_q: @grocery_q.presence), class: "btn btn-hs-outline btn-sm" %>
                       <%= button_to "Delete", grocery_item_path(item), method: :delete, class: "btn btn-outline-danger btn-sm", form: { data: { turbo_confirm: "Delete #{item.item_name}?" } } %>
                     </div>
                   </td>
@@ -160,9 +185,10 @@
                   <div class="col-8"><%= f.text_field :item_name, class: "form-control form-control-sm", required: true, placeholder: "Item name" %></div>
                   <div class="col-6"><%= f.number_field :old_stock, class: "form-control form-control-sm", step: 0.001, placeholder: "Old stock" %></div>
                   <div class="col-6"><%= f.number_field :new_stock_added, class: "form-control form-control-sm", step: 0.001, placeholder: "New stock" %></div>
-                  <div class="col-12"><%= f.text_field :unit, class: "form-control form-control-sm", placeholder: "Unit" %></div>
+                  <div class="col-6"><%= f.text_field :unit, class: "form-control form-control-sm", placeholder: "Unit" %></div>
+                  <div class="col-6"><%= f.number_field :issued, class: "form-control form-control-sm", step: 0.001, min: 0, placeholder: "Issued" %></div>
                   <div class="col-6"><%= f.submit "Save", class: "btn btn-hs-gold btn-sm w-100" %></div>
-                  <div class="col-6"><%= link_to "Cancel", root_path(tab: "grocery"), class: "btn btn-hs-outline btn-sm w-100" %></div>
+                  <div class="col-6"><%= link_to "Cancel", grocery_path(grocery_q: @grocery_q.presence), class: "btn btn-hs-outline btn-sm w-100" %></div>
                 </div>
               <% end %>
             <% else %>
@@ -181,9 +207,27 @@
                     <%= item.unit %>
                   </dd>
                 </div>
+                <div>
+                  <dt>Issued</dt>
+                  <dd>
+                    <%= number_with_precision(item.issued, precision: 3, strip_insignificant_zeros: true) %>
+                    <%= item.unit %>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Total</dt>
+                  <dd class="text-hs-gold fw-semibold">
+                    <%= number_with_precision(item.available_total, precision: 3, strip_insignificant_zeros: true) %>
+                    <%= item.unit %>
+                  </dd>
+                </div>
               </dl>
+              <%= form_with url: issue_grocery_item_path(item), method: :post, class: "hs-issue-form d-flex gap-2 mt-2" do %>
+                <%= number_field_tag :issue_qty, nil, class: "form-control form-control-sm", step: 0.001, min: 0.001, placeholder: "Qty to issue", required: true %>
+                <%= submit_tag "Issue", class: "btn btn-hs-outline btn-sm" %>
+              <% end %>
               <div class="d-flex gap-2 mt-2">
-                <%= link_to "Edit", root_path(tab: "grocery", edit_grocery: item.id), class: "btn btn-hs-outline btn-sm flex-fill" %>
+                <%= link_to "Edit", grocery_path(edit_grocery: item.id, grocery_q: @grocery_q.presence), class: "btn btn-hs-outline btn-sm flex-fill" %>
                 <%= button_to "Delete", grocery_item_path(item), method: :delete, class: "btn btn-outline-danger btn-sm flex-fill", form: { data: { turbo_confirm: "Delete #{item.item_name}?" }, class: "flex-fill" } %>
               </div>
             <% end %>
@@ -191,11 +235,22 @@
         <% end %>
       </div>
 
-      <p class="text-end text-hs-muted small mb-0 mt-3">Total items: <%= @grocery_items.count %></p>
+      <p class="text-end text-hs-muted small mb-0 mt-3">
+        <% if @grocery_q.present? %>
+          Showing <%= @grocery_items.size %> result<%= "s" unless @grocery_items.size == 1 %> for “<%= @grocery_q %>”
+        <% else %>
+          Total items: <%= @grocery_items.size %>
+        <% end %>
+      </p>
     <% else %>
       <div class="text-center py-4 text-hs-muted">
-        <p class="mb-1">No grocery data yet.</p>
-        <p class="small mb-0">Add an item above, or download the sample sheet and upload.</p>
+        <% if @grocery_q.present? %>
+          <p class="mb-1">No items found for “<%= @grocery_q %>”.</p>
+          <p class="small mb-0"><%= link_to "Clear search", grocery_path, class: "text-hs-gold" %></p>
+        <% else %>
+          <p class="mb-1">No grocery data yet.</p>
+          <p class="small mb-0">Add an item above, or download the sample sheet and upload.</p>
+        <% end %>
       </div>
     <% end %>
   </div>

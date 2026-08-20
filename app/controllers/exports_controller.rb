@@ -9,6 +9,7 @@ class ExportsController < ApplicationController
 
   def checklist
     date = parse_date(params[:checklist_date]) || Date.current
+    date = Date.current if date > Date.current
     daily_checklist = DailyChecklist.ensure_entries_for(date)
     entries = checklist_entries_for(daily_checklist)
     return redirect_with_alert("checklist", "No checklist data to export.", checklist_date: date) if entries.none?
@@ -31,16 +32,7 @@ class ExportsController < ApplicationController
     send_xlsx(data, filename)
   end
 
-  def team_members
-    members = TeamMember.ordered
-    return redirect_with_alert("hotel_info", "No team data to export.") if members.none?
-
-    data, filename = XlsxExporter.team_members(members)
-    send_xlsx(data, filename)
-  end
-
   private
-
   def send_xlsx(data, filename)
     send_data data,
       filename: filename,
@@ -49,7 +41,13 @@ class ExportsController < ApplicationController
   end
 
   def redirect_with_alert(tab, message, extra_params = {})
-    redirect_to root_path({ tab: tab }.merge(extra_params)), alert: message
+    path = case tab
+    when "checklist" then checklist_path(extra_params)
+    when "quantity" then quantities_path(extra_params)
+    when "bills" then bills_path(extra_params)
+    else grocery_path(extra_params)
+    end
+    redirect_to path, alert: message
   end
 
   def checklist_entries_for(daily_checklist)

@@ -1,16 +1,16 @@
 class GroceriesController < ApplicationController
-  before_action :set_grocery_item, only: [ :update, :destroy ]
+  before_action :set_grocery_item, only: [ :update, :destroy, :issue ]
 
   def import
     if params[:file].blank?
-      redirect_to root_path(tab: "grocery"), alert: "Please select an Excel file to upload."
+      redirect_to grocery_path, alert: "Please select an Excel file to upload."
       return
     end
 
     count = GroceryItem.import_from_spreadsheet(params[:file])
-    redirect_to root_path(tab: "grocery"), notice: "Successfully imported #{count} grocery items."
+    redirect_to grocery_path, notice: "Successfully imported #{count} grocery items."
   rescue StandardError => e
-    redirect_to root_path(tab: "grocery"), alert: "Import failed: #{e.message}"
+    redirect_to grocery_path, alert: "Import failed: #{e.message}"
   end
 
   def sample
@@ -28,9 +28,9 @@ class GroceriesController < ApplicationController
     item.apply_total_stock!
 
     if item.save
-      redirect_to root_path(tab: "grocery"), notice: "Added #{item.item_name}."
+      redirect_to grocery_path, notice: "Added #{item.item_name}."
     else
-      redirect_to root_path(tab: "grocery"), alert: item.errors.full_messages.to_sentence
+      redirect_to grocery_path, alert: item.errors.full_messages.to_sentence
     end
   end
 
@@ -39,19 +39,40 @@ class GroceriesController < ApplicationController
     @grocery_item.apply_total_stock!
 
     if @grocery_item.save
-      redirect_to root_path(tab: "grocery"), notice: "Updated #{@grocery_item.item_name}."
+      redirect_to grocery_path, notice: "Updated #{@grocery_item.item_name}."
     else
-      redirect_to root_path(tab: "grocery", edit_grocery: @grocery_item.id),
+      redirect_to grocery_path(edit_grocery: @grocery_item.id),
                   alert: @grocery_item.errors.full_messages.to_sentence
     end
+  end
+
+  def issue
+    amount = params[:issue_qty].to_d
+    if amount <= 0
+      redirect_to grocery_path, alert: "Issue quantity must be greater than zero."
+      return
+    end
+
+    new_issued = @grocery_item.issued.to_d + amount
+    if new_issued > @grocery_item.quantity.to_d
+      redirect_to grocery_path,
+                  alert: "Cannot issue #{amount}. Only #{@grocery_item.available_total} available for #{@grocery_item.item_name}."
+      return
+    end
+
+    @grocery_item.update!(issued: new_issued)
+    redirect_to grocery_path,
+                notice: "Issued #{amount} #{@grocery_item.unit} of #{@grocery_item.item_name}. Remaining total: #{@grocery_item.available_total}."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to grocery_path, alert: e.record.errors.full_messages.to_sentence
   end
 
   def destroy
     name = @grocery_item.item_name
     @grocery_item.destroy!
-    redirect_to root_path(tab: "grocery"), notice: "Deleted #{name}."
+    redirect_to grocery_path, notice: "Deleted #{name}."
   rescue ActiveRecord::RecordNotDestroyed
-    redirect_to root_path(tab: "grocery"), alert: "Could not delete grocery item."
+    redirect_to grocery_path, alert: "Could not delete grocery item."
   end
 
   private
@@ -59,7 +80,7 @@ class GroceriesController < ApplicationController
   def set_grocery_item
     @grocery_item = GroceryItem.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    redirect_to root_path(tab: "grocery"), alert: "Grocery item not found."
+    redirect_to grocery_path, alert: "Grocery item not found."
   end
 
   def grocery_params
@@ -69,7 +90,8 @@ class GroceriesController < ApplicationController
       :old_stock,
       :new_stock_added,
       :unit,
-      :quantity
+      :quantity,
+      :issued
     )
   end
 
