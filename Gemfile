@@ -45,7 +45,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # Excel file parsing for grocery and quantity uploads
-gem "roo", "~> 2.10"
+gem "roo", "~> 3.0"
 gem "csv"
 
 # Excel export (.xlsx)
