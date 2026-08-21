@@ -1,7 +1,7 @@
 class BillsController < ApplicationController
   before_action :set_dining_table, only: [ :show, :add_item ]
   before_action :set_bill_from_table, only: [ :add_item ]
-  before_action :set_bill, only: [ :update_item, :remove_item, :pay, :pdf, :print, :destroy ]
+  before_action :set_bill, only: [ :update_item, :remove_item, :pay, :pdf, :print, :kot, :destroy ]
 
   def show
     @bill = Bill.open_for!(@dining_table)
@@ -84,6 +84,43 @@ class BillsController < ApplicationController
     end
 
     @line_items = @bill.bill_line_items.includes(:menu_item).order(:id)
+    render layout: "print"
+  end
+
+  def kot
+    if @bill.deleted?
+      redirect_back_or_bills(alert: "Cannot print KOT for a deleted bill.")
+      return
+    end
+
+    @line_items = @bill.bill_line_items.includes(:menu_item).order(:id)
+    if @line_items.empty?
+      redirect_to bill_path(@bill.dining_table), alert: "Add items to the order before printing KOT."
+      return
+    end
+
+    reprint = params[:reprint].present?
+
+    @kot_rows = if reprint
+      @line_items.map { |line| { name: line.item_name, quantity: line.quantity, category: line.menu_item&.category } }
+    else
+      @line_items.filter_map do |line|
+        qty = line.pending_kot_quantity
+        next if qty <= 0
+
+        { name: line.item_name, quantity: qty, category: line.menu_item&.category }
+      end
+    end
+
+    if @kot_rows.empty?
+      redirect_to bill_path(@bill.dining_table),
+                  alert: "All items already sent to kitchen. Use Reprint KOT for a full copy."
+      return
+    end
+
+    @kot_reprint = reprint
+    @bill.mark_kot_sent! unless reprint
+
     render layout: "print"
   end
 

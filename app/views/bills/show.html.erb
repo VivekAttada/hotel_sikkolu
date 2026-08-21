@@ -132,7 +132,20 @@
           </div>
 
           <% if @bill.active? %>
-            <%= button_to pay_bill_path(@bill), method: :post, class: "btn btn-hs-gold w-100 mb-2", form: { data: { turbo_confirm: "Mark bill as paid and generate PDF?" } } do %>
+            <% pending_kot = @line_items.sum(&:pending_kot_quantity) %>
+            <div class="d-grid gap-2 mb-2">
+              <%= button_to bill_kot_path(@bill), method: :post, class: "btn btn-hs-gold w-100", form: { data: { turbo: false } } do %>
+                <i class="bi bi-printer"></i>
+                Print KOT<%= " (#{pending_kot} new)" if pending_kot.positive? %>
+              <% end %>
+              <% if @line_items.any? { |line| line.kot_sent_quantity.to_i.positive? } %>
+                <%= link_to bill_kot_path(@bill, reprint: 1), class: "btn btn-hs-outline w-100", target: "_blank", rel: "noopener", data: { turbo: false } do %>
+                  <i class="bi bi-arrow-repeat"></i>
+                  Reprint full KOT
+                <% end %>
+              <% end %>
+            </div>
+            <%= button_to pay_bill_path(@bill), method: :post, class: "btn btn-hs-outline w-100 mb-2", form: { data: { turbo_confirm: "Mark bill as paid and generate PDF?" } } do %>
               Mark as Paid & Generate PDF
             <% end %>
             <%= button_to "Delete bill", delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger w-100", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills." } } %>

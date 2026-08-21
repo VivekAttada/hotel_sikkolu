@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -43,6 +43,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_160000) do
     t.integer "bill_id", null: false
     t.datetime "created_at", null: false
     t.string "item_name", null: false
+    t.integer "kot_sent_quantity", default: 0, null: false
     t.decimal "line_total", precision: 10, scale: 2, default: "0.0", null: false
     t.integer "menu_item_id"
     t.integer "quantity", default: 1, null: false

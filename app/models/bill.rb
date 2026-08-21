@@ -114,6 +114,24 @@ class Bill < ApplicationRecord
     end
   end
 
+  def pending_kot_items
+    bill_line_items.select(&:kot_pending?)
+  end
+
+  def pending_kot?
+    bill_line_items.any?(&:kot_pending?)
+  end
+
+  def mark_kot_sent!
+    transaction do
+      bill_line_items.find_each do |line|
+        next unless line.kot_pending?
+
+        line.update!(kot_sent_quantity: line.quantity)
+      end
+    end
+  end
+
   def status_label
     return "Deleted" if deleted?
 
