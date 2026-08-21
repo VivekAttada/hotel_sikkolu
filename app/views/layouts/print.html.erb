@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for?(:title) ? yield(:title) : "Print — Hotel Sikkolu" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex">
+    <%= csrf_meta_tags %>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        font-family: Georgia, "Times New Roman", serif;
+        color: #111;
+        background: #fff;
+      }
+      .print-toolbar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+      }
+      .print-toolbar button,
+      .print-toolbar a {
+        font-family: system-ui, sans-serif;
+        font-size: 0.875rem;
+        padding: 0.45rem 0.85rem;
+        border: 1px solid #333;
+        background: #fff;
+        color: #111;
+        text-decoration: none;
+        cursor: pointer;
+        border-radius: 0.25rem;
+      }
+      .print-toolbar button.primary {
+        background: #111;
+        color: #fff;
+      }
+      @media print {
+        .print-toolbar { display: none !important; }
+        body { padding: 0; }
+      }
+    </style>
+    <%= yield :head %>
+  </head>
+  <body>
+    <div class="print-toolbar">
+      <button type="button" class="primary" onclick="window.print()">Print</button>
+      <a href="javascript:window.close()">Close</a>
+    </div>
+    <%= yield %>
+    <script>
+      window.addEventListener("load", function() {
+        window.setTimeout(function() { window.print(); }, 250);
+      });
+    </script>
+  </body>
+</html>

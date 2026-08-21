@@ -23,7 +23,10 @@
             <td><%= bill.deleted_at&.strftime("%I:%M %p") %></td>
             <td class="text-end">
               <% if bill.status == "paid" %>
-                <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
+                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                  <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
+                  <%= link_to "Print", bill_print_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
+                </div>
               <% end %>
             </td>
           </tr>

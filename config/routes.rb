@@ -30,4 +30,5 @@ Rails.application.routes.draw do
   post "bills/:id/pay", to: "bills#pay", as: :pay_bill
   delete "bills/:id", to: "bills#destroy", as: :delete_bill
   get "bills/:id/pdf", to: "bills#pdf", as: :bill_pdf
+  get "bills/:id/print", to: "bills#print", as: :bill_print
 end

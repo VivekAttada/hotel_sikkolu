@@ -1,7 +1,7 @@
 class BillsController < ApplicationController
   before_action :set_dining_table, only: [ :show, :add_item ]
   before_action :set_bill_from_table, only: [ :add_item ]
-  before_action :set_bill, only: [ :update_item, :remove_item, :pay, :pdf, :destroy ]
+  before_action :set_bill, only: [ :update_item, :remove_item, :pay, :pdf, :print, :destroy ]
 
   def show
     @bill = Bill.open_for!(@dining_table)
@@ -75,6 +75,16 @@ class BillsController < ApplicationController
       filename: "bill_#{@bill.bill_number}.pdf",
       type: "application/pdf",
       disposition: "inline"
+  end
+
+  def print
+    unless @bill.status == "paid"
+      redirect_back_or_bills(alert: "Print is available after payment.")
+      return
+    end
+
+    @line_items = @bill.bill_line_items.includes(:menu_item).order(:id)
+    render layout: "print"
   end
 
   private

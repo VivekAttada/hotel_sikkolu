@@ -22,6 +22,10 @@
             <i class="bi bi-file-earmark-pdf"></i>
             <span>Download PDF</span>
           <% end %>
+          <%= link_to bill_print_path(@bill), class: "btn btn-hs-outline btn-sm hs-action-btn", target: "_blank", rel: "noopener", data: { turbo: false } do %>
+            <i class="bi bi-printer"></i>
+            <span>Print</span>
+          <% end %>
         <% end %>
         <% unless @bill.deleted? %>
           <%= button_to delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger btn-sm hs-action-btn", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills and free the table if active." } } do %>
