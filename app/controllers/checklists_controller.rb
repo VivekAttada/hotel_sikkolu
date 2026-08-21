@@ -1,15 +1,14 @@
 class ChecklistsController < ApplicationController
+  before_action :set_entry, only: [ :update, :upload_photo, :destroy_photo ]
+
   def update
-    entry = ChecklistEntry.find(params[:id])
     checked_value = params[:checked] == "1"
-    entry.toggle!(checked_value)
+    @entry.toggle!(checked_value)
 
     redirect_to checklist_path(
-      checklist_date: entry.daily_checklist.checklist_date,
+      checklist_date: @entry.checklist_date,
       checklist_view: sanitized_view
-    ), notice: "Checklist updated for #{entry.daily_checklist.checklist_date.strftime('%d %b %Y')}."
-  rescue ActiveRecord::RecordNotFound
-    redirect_to checklist_path, alert: "Checklist entry not found."
+    ), notice: "Checklist updated for #{@entry.checklist_date.strftime('%d %b %Y')}."
   end
 
   def bulk_update
@@ -41,7 +40,44 @@ class ChecklistsController < ApplicationController
     redirect_to checklist_path(checklist_date: date, checklist_view: view), notice: message
   end
 
+  def upload_photo
+    if params[:photo].blank?
+      redirect_to checklist_return_path, alert: "Please take or choose a photo to upload."
+      return
+    end
+
+    @entry.photo.attach(params[:photo])
+
+    if @entry.valid? && @entry.photo.attached?
+      redirect_to checklist_return_path,
+                  notice: "Photo saved for “#{@entry.checklist_task.title}” on #{@entry.checklist_date.strftime('%d %b %Y')}."
+    else
+      @entry.photo.purge if @entry.photo.attached?
+      redirect_to checklist_return_path,
+                  alert: @entry.errors.full_messages.to_sentence.presence || "Could not upload photo."
+    end
+  end
+
+  def destroy_photo
+    @entry.photo.purge if @entry.photo.attached?
+    redirect_to checklist_return_path,
+                notice: "Photo removed for “#{@entry.checklist_task.title}”."
+  end
+
   private
+
+  def set_entry
+    @entry = ChecklistEntry.includes(:daily_checklist, :checklist_task).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to checklist_path, alert: "Checklist entry not found."
+  end
+
+  def checklist_return_path
+    checklist_path(
+      checklist_date: @entry.checklist_date,
+      checklist_view: sanitized_view
+    )
+  end
 
   def sanitized_view
     view = params[:checklist_view].to_s

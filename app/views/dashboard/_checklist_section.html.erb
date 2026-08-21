@@ -19,7 +19,7 @@
         <% if entries.any? %>
           <% entries.each do |entry| %>
             <tr>
-              <td colspan="2" class="p-0">
+              <td class="p-0">
                 <%= form_with url: checklist_entry_path(entry), method: :patch, class: "hs-checklist-item mb-0" do %>
                   <%= hidden_field_tag :checklist_view, checklist_view %>
                   <label class="hs-checklist-row" for="checklist_entry_<%= entry.id %>">
@@ -38,11 +38,51 @@
                   </label>
                 <% end %>
               </td>
+              <td class="hs-checklist-photo-cell">
+                <div class="hs-checklist-photo-actions">
+                  <% if entry.photo.attached? %>
+                    <%= link_to rails_blob_path(entry.photo, disposition: "inline"),
+                          class: "hs-checklist-thumb-link",
+                          target: "_blank",
+                          rel: "noopener",
+                          data: { turbo: false },
+                          title: "View photo" do %>
+                      <%= image_tag url_for(entry.photo), class: "hs-checklist-thumb", alt: "Photo for #{entry.checklist_task.title}" %>
+                    <% end %>
+                    <%= button_to destroy_checklist_entry_photo_path(entry),
+                          method: :delete,
+                          class: "btn btn-outline-danger btn-sm",
+                          title: "Remove photo",
+                          params: { checklist_view: checklist_view },
+                          form: { data: { turbo_confirm: "Remove photo for #{entry.checklist_task.title}?" } } do %>
+                      <i class="bi bi-x-lg"></i>
+                    <% end %>
+                  <% end %>
+
+                  <%= form_with url: checklist_entry_photo_path(entry),
+                        method: :post,
+                        multipart: true,
+                        class: "hs-checklist-camera-form mb-0" do %>
+                    <%= hidden_field_tag :checklist_view, checklist_view %>
+                    <%= file_field_tag :photo,
+                          accept: "image/*",
+                          capture: "environment",
+                          id: "checklist_photo_#{entry.id}",
+                          class: "hs-checklist-camera-input",
+                          required: true,
+                          onchange: "this.form.requestSubmit()" %>
+                    <label for="checklist_photo_<%= entry.id %>" class="btn btn-hs-outline btn-sm hs-checklist-camera-btn" title="<%= entry.photo.attached? ? 'Retake photo' : 'Take photo' %>">
+                      <i class="bi bi-camera<%= entry.photo.attached? ? '-fill' : '' %>"></i>
+                      <span class="d-none d-sm-inline"><%= entry.photo.attached? ? "Retake" : "Camera" %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </td>
             </tr>
           <% end %>
         <% else %>
           <tr>
-            <td class="text-hs-muted">No tasks in this section.</td>
+            <td colspan="2" class="text-hs-muted">No tasks in this section.</td>
           </tr>
         <% end %>
       </tbody>

@@ -16,6 +16,8 @@ Rails.application.routes.draw do
   delete "groceries/:id", to: "groceries#destroy"
   patch "checklists/bulk", to: "checklists#bulk_update", as: :bulk_checklist
   patch "checklists/:id", to: "checklists#update", as: :checklist_entry
+  post "checklists/:id/photo", to: "checklists#upload_photo", as: :checklist_entry_photo
+  delete "checklists/:id/photo", to: "checklists#destroy_photo", as: :destroy_checklist_entry_photo
   post "quantities/import", to: "quantities#import", as: :import_quantities
   get "quantities/sample", to: "quantities#sample", as: :quantity_sample
   post "quantities/expense", to: "quantities#add_expense", as: :add_quantity_expense

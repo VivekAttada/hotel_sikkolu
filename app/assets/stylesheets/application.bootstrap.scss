@@ -388,6 +388,56 @@ h1, h2, h3, h4, h5, h6,
   }
 }
 
+.hs-checklist-photo-cell {
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: middle !important;
+  padding: 0.5rem 0.65rem !important;
+}
+
+.hs-checklist-photo-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.hs-checklist-camera-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.hs-checklist-camera-form {
+  display: inline-flex;
+  position: relative;
+}
+
+.hs-checklist-camera-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.hs-checklist-thumb-link {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.hs-checklist-thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  border: 1px solid rgba($hs-gold, 0.35);
+}
+
 // ── Team cards ────────────────────────────────────────
 .team-card {
   background-color: $hs-olive-dark;

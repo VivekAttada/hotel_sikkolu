@@ -68,6 +68,7 @@ class DashboardController < ApplicationController
       .joins(:checklist_task)
       .merge(ChecklistTask.active_tasks)
       .includes(:checklist_task)
+      .with_attached_photo
       .order(Arel.sql("CASE checklist_tasks.frequency WHEN 'daily' THEN 1 WHEN 'weekly' THEN 2 WHEN 'monthly' THEN 3 END"), "checklist_tasks.position ASC", "checklist_tasks.id ASC")
     @pending_checklist_entries = @checklist_entries.reject(&:checked)
     @checklist_entries_by_frequency = @checklist_entries.group_by { |entry| entry.checklist_task.frequency }
