@@ -38,17 +38,6 @@ class XlsxExporter
       end
     end
 
-    def quantity_sample_template
-      build(filename: "hotel_sikkolu_quantities_sample.xlsx") do |workbook|
-        add_sheet(workbook, "Daily Quantities") do |sheet|
-          sheet.add_row [ "HOTEL SIKKOLU - Daily Opening Quantities (Date: #{Date.current.strftime('%d/%m/%Y')})" ]
-          sheet.add_row []
-          sheet.add_row [ "Item Name", "Quantity", "Unit" ]
-          sheet.add_row [ "Rice", 50, "kg" ]
-        end
-      end
-    end
-
     def checklist(daily_checklist, entries)
       date_label = daily_checklist.checklist_date.strftime("%Y-%m-%d")
       build(filename: "checklist_#{date_label}.xlsx") do |workbook|
@@ -75,38 +64,6 @@ class XlsxExporter
               entry.checklist_task.frequency.titleize,
               entry.checked ? "Yes" : "No",
               entry.checked_at&.strftime("%d %b %Y %I:%M %p")
-            ]
-          end
-        end
-      end
-    end
-
-    def quantities(daily_inventory, inventory_items, expenses)
-      date_label = daily_inventory.inventory_date.strftime("%Y-%m-%d")
-      build(filename: "quantities_#{date_label}.xlsx") do |workbook|
-        add_sheet(workbook, "Inventory") do |sheet|
-          sheet.add_row [ "Date", daily_inventory.inventory_date.strftime("%A, %d %B %Y") ]
-          sheet.add_row []
-          sheet.add_row [ "Item", "Opening", "Used", "Available", "Unit" ]
-          inventory_items.each do |item|
-            sheet.add_row [
-              item.item_name,
-              item.opening_quantity,
-              item.total_used,
-              item.current_quantity,
-              item.unit
-            ]
-          end
-        end
-
-        add_sheet(workbook, "Expenses") do |sheet|
-          sheet.add_row [ "Item", "Quantity Used", "Notes", "Recorded At" ]
-          expenses.each do |expense|
-            sheet.add_row [
-              expense.item_name,
-              expense.quantity_used,
-              expense.notes,
-              expense.created_at.strftime("%d %b %Y %I:%M %p")
             ]
           end
         end

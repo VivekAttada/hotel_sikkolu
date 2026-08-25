@@ -5,7 +5,6 @@ Rails.application.routes.draw do
   root "dashboard#grocery"
   get "grocery", to: "dashboard#grocery", as: :grocery
   get "checklist", to: "dashboard#checklist", as: :checklist
-  get "quantities", to: "dashboard#quantities", as: :quantities
   get "bills", to: "dashboard#bills", as: :bills
 
   post "groceries/import", to: "groceries#import", as: :import_groceries
@@ -18,13 +17,9 @@ Rails.application.routes.draw do
   patch "checklists/:id", to: "checklists#update", as: :checklist_entry
   post "checklists/:id/photo", to: "checklists#upload_photo", as: :checklist_entry_photo
   delete "checklists/:id/photo", to: "checklists#destroy_photo", as: :destroy_checklist_entry_photo
-  post "quantities/import", to: "quantities#import", as: :import_quantities
-  get "quantities/sample", to: "quantities#sample", as: :quantity_sample
-  post "quantities/expense", to: "quantities#add_expense", as: :add_quantity_expense
 
   get "exports/grocery", to: "exports#grocery", as: :export_grocery
   get "exports/checklist", to: "exports#checklist", as: :export_checklist
-  get "exports/quantities", to: "exports#quantities", as: :export_quantities
   get "bills/tables/:id", to: "bills#show", as: :bill
   post "bills/tables/:id/items", to: "bills#add_item", as: :add_bill_item
   patch "bills/:id/items/:line_item_id", to: "bills#update_item", as: :update_bill_item

@@ -1,16 +1,4 @@
 class ExcelImporter
-  QUANTITY_COLUMN_MAP = {
-    "item name" => :item_name,
-    "item_name" => :item_name,
-    "name" => :item_name,
-    "item" => :item_name,
-    "quantity" => :quantity,
-    "qty" => :quantity,
-    "opening quantity" => :opening_quantity,
-    "opening_quantity" => :opening_quantity,
-    "unit" => :unit
-  }.freeze
-
   GROCERY_COLUMN_MAP = {
     "sl no" => :serial_no,
     "sl no." => :serial_no,
@@ -32,10 +20,6 @@ class ExcelImporter
     "issued" => :issued,
     "issue" => :issued
   }.freeze
-
-  def self.parse(file)
-    parse_with_map(file, QUANTITY_COLUMN_MAP)
-  end
 
   def self.parse_grocery(file)
     parse_with_map(file, GROCERY_COLUMN_MAP, grocery: true)

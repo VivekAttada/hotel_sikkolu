@@ -18,20 +18,6 @@ class ExportsController < ApplicationController
     send_xlsx(data, filename)
   end
 
-  def quantities
-    date = parse_date(params[:inventory_date]) || Date.current
-    daily_inventory = DailyInventory.for_date(date)
-    return redirect_with_alert("quantity", "No inventory data to export for this date.", inventory_date: date) unless daily_inventory
-
-    inventory_items = daily_inventory.inventory_items.order(:item_name)
-    expenses = QuantityExpense.joins(:inventory_item)
-      .where(inventory_items: { daily_inventory_id: daily_inventory.id })
-      .order(created_at: :desc)
-
-    data, filename = XlsxExporter.quantities(daily_inventory, inventory_items, expenses)
-    send_xlsx(data, filename)
-  end
-
   private
   def send_xlsx(data, filename)
     send_data data,
@@ -43,7 +29,6 @@ class ExportsController < ApplicationController
   def redirect_with_alert(tab, message, extra_params = {})
     path = case tab
     when "checklist" then checklist_path(extra_params)
-    when "quantity" then quantities_path(extra_params)
     when "bills" then bills_path(extra_params)
     else grocery_path(extra_params)
     end

@@ -818,45 +818,6 @@ h1, h2, h3, h4, h5, h6,
   }
 }
 
-.hs-badge-available {
-  background-color: rgba($success, 0.2);
-  color: lighten($success, 15%);
-  border: 1px solid rgba($success, 0.35);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.hs-expense-form {
-  border-top: 1px solid rgba($hs-gold, 0.15);
-  padding-top: 0.75rem;
-}
-
-.hs-quantity-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-
-  .form-control,
-  .form-select {
-    width: auto;
-    min-width: 7.5rem;
-    max-width: 100%;
-    background: rgba($hs-olive, 0.45);
-    border-color: rgba($hs-gold, 0.25);
-    color: $hs-cream;
-  }
-
-  input[type="date"] {
-    min-width: 9.5rem;
-  }
-
-  input[name="item_q"] {
-    min-width: 10rem;
-    flex: 1 1 10rem;
-  }
-}
-
 @media (max-width: 767.98px) {
   .hs-navbar {
     padding: 0.5rem 0;

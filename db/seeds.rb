@@ -97,12 +97,16 @@ User.find_or_create_by!(username: "hotel_sikkolu") do |user|
   user.password_confirmation = "hotel_sikkolu@123"
 end
 
-puts "Seeding dining tables A1–A6..."
-(1..6).each do |n|
-  table = DiningTable.find_or_initialize_by(name: "A#{n}")
-  table.position = n
+puts "Seeding dining tables R1–R4, M1–M2, L1–L4..."
+%w[R1 R2 R3 R4 M1 M2 L1 L2 L3 L4].each_with_index do |name, index|
+  table = DiningTable.find_or_initialize_by(name: name)
+  table.position = index + 1
   table.active = true
   table.save!
+end
+
+DiningTable.where.not(name: %w[R1 R2 R3 R4 M1 M2 L1 L2 L3 L4]).find_each do |table|
+  table.update!(active: false)
 end
 
 puts "Seeding restaurant menu from Hotel Sikkolu client menu..."
