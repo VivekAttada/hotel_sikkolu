@@ -98,15 +98,23 @@ User.find_or_create_by!(username: "hotel_sikkolu") do |user|
 end
 
 puts "Seeding dining tables R1–R4, M1–M2, L1–L4..."
-%w[R1 R2 R3 R4 M1 M2 L1 L2 L3 L4].each_with_index do |name, index|
+seed_table_names = %w[R1 R2 R3 R4 M1 M2 L1 L2 L3 L4]
+seed_table_names.each_with_index do |name, index|
   table = DiningTable.find_or_initialize_by(name: name)
   table.position = index + 1
-  table.active = true
+  # Keep parent inactive while its A/B splits are in use
+  table.active = table.persisted? ? !table.currently_split? : true
   table.save!
 end
 
-DiningTable.where.not(name: %w[R1 R2 R3 R4 M1 M2 L1 L2 L3 L4]).find_each do |table|
-  table.update!(active: false)
+DiningTable.takeaway!
+
+DiningTable.find_each do |table|
+  next if seed_table_names.include?(table.name)
+  next if table.name == DiningTable::TAKEAWAY_NAME
+  next if table.parent_dining_table_id.present? && seed_table_names.include?(table.parent_dining_table&.name)
+
+  table.update!(active: false) if table.active?
 end
 
 puts "Seeding restaurant menu from Hotel Sikkolu client menu..."

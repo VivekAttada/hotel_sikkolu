@@ -1,0 +1,131 @@
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Settings</h5>
+        <small>Save WhatsApp contact and send today’s full collection report when you want.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <section class="hs-pay-panel mb-4">
+      <div class="hs-pay-panel-head">
+        <h6>WhatsApp contact</h6>
+        <small>Used when you send today’s report on WhatsApp.</small>
+      </div>
+
+      <%= form_with url: settings_path, method: :patch, class: "hs-settings-form" do %>
+        <div class="mb-3">
+          <label class="form-label" for="whatsapp_number"><i class="bi bi-whatsapp me-1"></i>WhatsApp mobile number</label>
+          <%= telephone_field_tag :whatsapp_number, @whatsapp_number,
+                id: "whatsapp_number",
+                class: "form-control",
+                placeholder: "919876543210",
+                autocomplete: "tel" %>
+          <div class="form-text text-hs-muted">
+            Country code without + or spaces. Example: <strong>919876543210</strong>.
+          </div>
+        </div>
+
+        <% if @whatsapp_normalized.present? %>
+          <p class="hs-settings-ready mb-3">
+            WhatsApp: <strong>+<%= @whatsapp_normalized %></strong>
+          </p>
+        <% end %>
+
+        <%= submit_tag "Save WhatsApp number", class: "btn btn-hs-gold hs-action-btn" %>
+      <% end %>
+    </section>
+
+    <section class="hs-pay-panel mb-4">
+      <div class="hs-pay-panel-head">
+        <h6>Today’s report</h6>
+        <small><%= @report_date.strftime("%d %b %Y") %> — totals, payments, dine-in / takeaway, and bill list</small>
+      </div>
+
+      <label class="form-label">Report preview</label>
+      <pre class="hs-whatsapp-preview mb-3"><%= @daily_report_body %></pre>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="hs-whatsapp-info-card h-100"
+               data-controller="whatsapp-send">
+            <h6><i class="bi bi-whatsapp me-1"></i> WhatsApp</h6>
+            <div class="hs-settings-form mb-3">
+              <label class="form-label" for="report_whatsapp_phone">Send to</label>
+              <input type="tel"
+                     id="report_whatsapp_phone"
+                     class="form-control"
+                     value="<%= @whatsapp_number %>"
+                     placeholder="919876543210"
+                     data-whatsapp-send-target="phone"
+                     autocomplete="tel">
+            </div>
+            <pre class="d-none" data-whatsapp-send-target="message"><%= @daily_report_body %></pre>
+            <p class="small text-danger mb-3 d-none" data-whatsapp-send-target="error">Enter a valid WhatsApp number (with country code).</p>
+            <button type="button"
+                    class="btn btn-hs-gold hs-action-btn hs-whatsapp-btn"
+                    data-action="whatsapp-send#open">
+              <i class="bi bi-whatsapp"></i>
+              <span>Send WhatsApp report</span>
+            </button>
+            <p class="form-text text-hs-muted mt-2 mb-0">Opens WhatsApp with the report. Tap Send to deliver.</p>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="hs-whatsapp-info-card h-100">
+            <h6><i class="bi bi-envelope me-1"></i> Email</h6>
+            <p class="mb-2 text-hs-muted small">Report is sent only to these addresses:</p>
+            <ul class="hs-report-recipients mb-3">
+              <% @report_recipients.each do |email| %>
+                <li><strong><%= email %></strong></li>
+              <% end %>
+            </ul>
+
+            <% if @resend_configured %>
+              <p class="hs-settings-ready mb-3">Resend API key is configured.</p>
+            <% else %>
+              <p class="text-danger small mb-3">Resend API key missing. Set <code>RESEND_API_KEY</code> in the environment.</p>
+            <% end %>
+
+            <%= form_with url: settings_email_report_path, method: :post do %>
+              <%= button_tag type: "submit", class: "btn btn-hs-gold hs-action-btn", disabled: !@resend_configured do %>
+                <i class="bi bi-envelope"></i>
+                <span>Send email report</span>
+              <% end %>
+            <% end %>
+            <p class="form-text text-hs-muted mt-2 mb-0">Sends today’s full report to all three emails via Resend.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hs-pay-panel">
+      <div class="hs-pay-panel-head">
+        <h6>How this works</h6>
+        <small>Daily report only — not per bill</small>
+      </div>
+      <div class="hs-whatsapp-info">
+        <div class="hs-whatsapp-info-card">
+          <h6>What gets sent</h6>
+          <ul class="mb-0">
+            <li>Today’s total collection</li>
+            <li>Dine-in vs Take Away amounts</li>
+            <li>Cash / UPI / Card split</li>
+            <li>List of paid bills for the day</li>
+          </ul>
+        </div>
+        <div class="hs-whatsapp-info-card">
+          <h6>Email recipients (fixed)</h6>
+          <p class="mb-0">
+            Email reports go only to the three addresses listed above.
+            From address must use your verified Resend domain
+            (<code>reports@updates.sikkolu.com</code>) via <code>RESEND_FROM_EMAIL</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

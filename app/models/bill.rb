@@ -1,18 +1,25 @@
 class Bill < ApplicationRecord
   belongs_to :dining_table
   has_many :bill_line_items, dependent: :destroy
+  has_many :bill_removals, dependent: :destroy
 
   STATUSES = %w[active paid].freeze
+  PAYMENT_METHODS = %w[cash upi card].freeze
 
   validates :bill_number, :status, :opened_at, presence: true
   validates :bill_number, uniqueness: true
   validates :status, inclusion: { in: STATUSES }
-  validate :only_one_active_bill_per_table, if: -> { active? && !deleted? && dining_table_id.present? }
+  validates :payment_method, inclusion: { in: PAYMENT_METHODS }, allow_nil: true
+  validate :only_one_active_bill_per_table, if: -> { active? && !deleted? && dining_table_id.present? && !takeaway_order? }
 
   scope :kept, -> { where(deleted_at: nil) }
   scope :trashed, -> { where.not(deleted_at: nil) }
   scope :active, -> { kept.where(status: "active") }
   scope :paid, -> { kept.where(status: "paid") }
+  scope :takeaway_orders, -> {
+    joins(:dining_table).where(dining_tables: { name: DiningTable::TAKEAWAY_NAME })
+  }
+  scope :active_takeaways, -> { active.takeaway_orders.order(opened_at: :desc) }
   scope :for_day, ->(date) {
     paid.where(paid_at: date.beginning_of_day..date.end_of_day)
   }
@@ -43,6 +50,14 @@ class Bill < ApplicationRecord
     create!(dining_table: dining_table)
   end
 
+  def self.create_takeaway!
+    create!(dining_table: DiningTable.takeaway!)
+  end
+
+  def takeaway_order?
+    dining_table&.takeaway?
+  end
+
   def add_menu_item!(menu_item, quantity: 1)
     raise ArgumentError, "Bill is deleted" if deleted?
     raise ArgumentError, "Bill is already paid" if status == "paid"
@@ -68,8 +83,11 @@ class Bill < ApplicationRecord
     quantity = quantity.to_i
     transaction do
       if quantity <= 0
+        record_post_kot_removal!(line_item, line_item.kot_sent_quantity.to_i)
         line_item.destroy!
       else
+        removed_from_kot = [ line_item.kot_sent_quantity.to_i - quantity, 0 ].max
+        record_post_kot_removal!(line_item, removed_from_kot)
         line_item.update!(quantity: quantity)
         line_item.recalculate_total!
         line_item.save!
@@ -83,17 +101,47 @@ class Bill < ApplicationRecord
     raise ArgumentError, "Bill is already paid" if status == "paid"
 
     transaction do
+      record_post_kot_removal!(line_item, line_item.kot_sent_quantity.to_i)
       line_item.destroy!
       recalculate_subtotal!
     end
   end
 
-  def mark_paid!
+  def post_kot_removals?
+    bill_removals.exists?
+  end
+
+  def mark_paid!(payment_method:, removal_reason: nil)
     raise ArgumentError, "Bill is deleted" if deleted?
     raise ArgumentError, "Bill is already paid" if status == "paid"
     raise ArgumentError, "Add at least one item before payment" if bill_line_items.empty?
 
-    update!(status: "paid", paid_at: Time.current, subtotal: bill_line_items.sum(:line_total))
+    method = payment_method.to_s.strip.downcase
+    raise ArgumentError, "Select payment method: Cash, UPI, or Card" unless PAYMENT_METHODS.include?(method)
+
+    reason = removal_reason.to_s.strip
+    if post_kot_removals? && reason.blank?
+      raise ArgumentError, "Enter a reason for items removed after KOT"
+    end
+
+    transaction do
+      if post_kot_removals?
+        bill_removals.where(reason: [ nil, "" ]).update_all(reason: reason, updated_at: Time.current)
+      end
+
+      update!(
+        status: "paid",
+        paid_at: Time.current,
+        payment_method: method,
+        subtotal: bill_line_items.sum(:line_total)
+      )
+    end
+  end
+
+  def payment_method_label
+    return "—" if payment_method.blank?
+
+    payment_method.upcase == "UPI" ? "UPI" : payment_method.titleize
   end
 
   def soft_delete!
@@ -139,6 +187,20 @@ class Bill < ApplicationRecord
   end
 
   private
+
+  def record_post_kot_removal!(line_item, quantity)
+    quantity = quantity.to_i
+    return if quantity <= 0
+
+    bill_removals.create!(
+      menu_item_id: line_item.menu_item_id,
+      item_name: line_item.item_name,
+      unit_price: line_item.unit_price,
+      quantity: quantity,
+      line_total: line_item.unit_price.to_d * quantity,
+      removed_at: Time.current
+    )
+  end
 
   def assign_defaults
     self.opened_at ||= Time.current

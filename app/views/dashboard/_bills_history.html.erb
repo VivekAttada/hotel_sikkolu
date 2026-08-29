@@ -7,6 +7,7 @@
           <th>Table</th>
           <th>Items</th>
           <th>Total</th>
+          <th>Payment</th>
           <th>Paid at</th>
           <th></th>
         </tr>
@@ -15,9 +16,10 @@
         <% bills.each do |bill| %>
           <tr>
             <td><%= bill.bill_number %></td>
-            <td><%= bill.dining_table.name %></td>
+            <td><%= bill.dining_table.display_name %></td>
             <td><%= bill.item_count %></td>
             <td>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></td>
+            <td><%= bill.payment_method_label %></td>
             <td><%= bill.paid_at&.strftime("%I:%M %p") %></td>
             <td class="text-end">
               <div class="d-inline-flex gap-1 flex-wrap justify-content-end">

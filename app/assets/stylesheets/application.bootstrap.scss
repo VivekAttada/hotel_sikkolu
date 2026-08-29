@@ -1006,6 +1006,351 @@ h1, h2, h3, h4, h5, h6,
   }
 }
 
+.hs-dining-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+
+  &.is-split .hs-dining-table {
+    border-style: dashed;
+  }
+}
+
+.hs-dining-actions {
+  min-height: 1.75rem;
+}
+
+.hs-dining-split-hint {
+  display: block;
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $hs-cream-muted;
+}
+
+.hs-takeaway-new-form {
+  display: contents;
+}
+
+.hs-takeaway-new-card {
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+  border-style: dashed !important;
+  color: inherit;
+  text-align: left;
+
+  .hs-dining-name {
+    color: $hs-gold;
+  }
+}
+
+.hs-takeaway-divider {
+  border-color: rgba($hs-gold, 0.2);
+  opacity: 1;
+}
+
+.hs-takeaway-empty {
+  border: 1px dashed rgba($hs-gold, 0.3);
+  border-radius: 0.65rem;
+  background: rgba($hs-olive, 0.25);
+}
+
+// ── Payments dashboard ────────────────────────────────
+.hs-pay-hero {
+  padding: 1.5rem 1.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba($hs-gold, 0.4);
+  background:
+    linear-gradient(135deg, rgba($hs-gold, 0.18), rgba($hs-olive-dark, 0.85) 55%),
+    $hs-olive-dark;
+  text-align: center;
+}
+
+.hs-pay-hero-label {
+  color: $hs-cream-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.hs-pay-hero-value {
+  font-family: $headings-font-family;
+  font-size: clamp(2rem, 5vw, 2.85rem);
+  font-weight: 700;
+  color: $hs-gold-light;
+  line-height: 1.15;
+  margin: 0.35rem 0;
+}
+
+.hs-pay-hero-meta {
+  color: $hs-cream-muted;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.hs-pay-dot {
+  opacity: 0.6;
+}
+
+.hs-pay-panel {
+  height: 100%;
+  padding: 1.15rem 1.1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba($hs-gold, 0.22);
+  background: rgba($hs-olive, 0.28);
+}
+
+.hs-pay-panel-head {
+  margin-bottom: 1rem;
+
+  h6 {
+    margin: 0;
+    color: $hs-gold;
+    font-size: 1rem;
+  }
+
+  small {
+    color: $hs-cream-muted;
+  }
+}
+
+.hs-pay-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.hs-pay-bar-meta,
+.hs-pay-bar-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.hs-pay-bar-label {
+  font-weight: 600;
+  color: $hs-cream;
+}
+
+.hs-pay-bar-amount {
+  color: $hs-gold-light;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.hs-pay-bar-foot {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: $hs-cream-muted;
+}
+
+.hs-pay-bar-track {
+  margin-top: 0.35rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: rgba($hs-charcoal, 0.45);
+  border: 1px solid rgba($hs-gold, 0.15);
+  overflow: hidden;
+}
+
+.hs-pay-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  min-width: 0;
+  transition: width 0.35s ease;
+
+  &.tone-gold {
+    background: linear-gradient(90deg, $hs-gold, $hs-gold-light);
+  }
+
+  &.tone-cream {
+    background: linear-gradient(90deg, darken($hs-cream, 18%), $hs-cream);
+  }
+
+  &.tone-olive {
+    background: linear-gradient(90deg, $hs-olive-light, lighten($hs-olive, 12%));
+  }
+}
+
+.hs-pay-stack {
+  display: flex;
+  height: 0.85rem;
+  margin-top: 1.15rem;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba($hs-gold, 0.2);
+  background: rgba($hs-charcoal, 0.35);
+}
+
+.hs-pay-stack-seg {
+  min-width: 0;
+
+  &.tone-gold { background: $hs-gold; }
+  &.tone-cream { background: darken($hs-cream, 12%); }
+  &.tone-olive { background: $hs-olive-light; }
+  &.tone-empty { background: rgba($hs-cream, 0.08); }
+}
+
+.hs-pay-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.hs-pay-summary-item {
+  padding: 0.85rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba($hs-gold, 0.18);
+  background: rgba($hs-olive-dark, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  strong {
+    font-family: $headings-font-family;
+    font-size: 1.2rem;
+    color: $hs-gold-light;
+  }
+}
+
+.hs-pay-summary-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $hs-cream-muted;
+}
+
+// ── Settings / WhatsApp ───────────────────────────────
+.hs-settings-form {
+  .form-label {
+    color: $hs-cream-muted;
+  }
+
+  .form-control {
+    background: rgba($hs-olive, 0.45);
+    border-color: rgba($hs-gold, 0.25);
+    color: #fff;
+    max-width: 22rem;
+
+    &::placeholder {
+      color: rgba($hs-cream, 0.45);
+    }
+
+    &:focus {
+      background: rgba($hs-olive, 0.55);
+      border-color: $hs-gold;
+      color: #fff;
+      box-shadow: 0 0 0 0.2rem rgba($hs-gold, 0.15);
+    }
+  }
+}
+
+.hs-settings-ready {
+  color: lighten($success, 12%);
+  font-size: 0.95rem;
+}
+
+.hs-whatsapp-info {
+  display: grid;
+  gap: 0.85rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hs-whatsapp-info-card {
+  padding: 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba($hs-gold, 0.18);
+  background: rgba($hs-olive-dark, 0.45);
+
+  h6 {
+    color: $hs-gold;
+    margin-bottom: 0.5rem;
+  }
+
+  p, li {
+    color: $hs-cream-muted;
+    font-size: 0.9rem;
+  }
+
+  ul {
+    padding-left: 1.1rem;
+  }
+}
+
+.hs-report-recipients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding: 0.35rem 0;
+    color: $hs-cream;
+    border-bottom: 1px solid rgba($hs-gold, 0.12);
+    word-break: break-all;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    strong {
+      color: $hs-gold-light;
+      font-weight: 600;
+    }
+  }
+}
+
+.hs-whatsapp-btn {
+  i {
+    color: #25d366;
+  }
+}
+
+.hs-whatsapp-preview {
+  max-height: 12rem;
+  overflow: auto;
+  padding: 0.75rem 0.85rem;
+  margin: 0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba($hs-gold, 0.25);
+  background: rgba($hs-charcoal, 0.45);
+  color: $hs-cream;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.hs-settle-modal .form-control {
+  background: rgba($hs-olive, 0.45);
+  border-color: rgba($hs-gold, 0.25);
+  color: $hs-cream;
+
+  &::placeholder {
+    color: rgba($hs-cream, 0.55);
+  }
+
+  &:focus {
+    background: rgba($hs-olive, 0.55);
+    border-color: $hs-gold;
+    color: $hs-cream;
+    box-shadow: 0 0 0 0.2rem rgba($hs-gold, 0.15);
+  }
+}
+
 .hs-bill-date-filter {
   display: flex;
   flex-wrap: wrap;
@@ -1215,3 +1560,112 @@ h1, h2, h3, h4, h5, h6,
   color: $hs-cream;
   font-size: 1.1rem;
 }
+
+.hs-settle-modal {
+  .modal-content {
+    background: $hs-olive-dark;
+    color: $hs-cream;
+    border: 1px solid rgba($hs-gold, 0.35);
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: rgba($hs-gold, 0.2);
+  }
+
+  .modal-title {
+    color: $hs-gold;
+  }
+
+  .hs-settle-intro {
+    color: $hs-cream;
+  }
+
+  textarea.form-control {
+    background: rgba($hs-olive, 0.45);
+    border-color: rgba($hs-gold, 0.25);
+    color: $hs-cream;
+
+    &::placeholder {
+      color: rgba($hs-cream, 0.55);
+    }
+
+    &:focus {
+      background: rgba($hs-olive, 0.55);
+      border-color: $hs-gold;
+      color: $hs-cream;
+      box-shadow: 0 0 0 0.2rem rgba($hs-gold, 0.15);
+    }
+  }
+}
+
+.hs-payment-options {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.hs-payment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba($hs-gold, 0.25);
+  border-radius: 0.5rem;
+  background: rgba($hs-olive, 0.35);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover,
+  &:has(.hs-payment-radio:checked) {
+    border-color: $hs-gold;
+    background: rgba($hs-gold, 0.12);
+  }
+
+  span {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+}
+
+.hs-payment-radio {
+  accent-color: $hs-gold;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+}
+
+.hs-settle-removals,
+.hs-bill-removals {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(#dc3545, 0.45);
+  border-radius: 0.5rem;
+  background: rgba(#dc3545, 0.08);
+}
+
+.hs-settle-removal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    color: lighten(#dc3545, 12%);
+    border-bottom: 1px solid rgba(#dc3545, 0.2);
+    font-size: 0.9rem;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.hs-removal-reason {
+  color: lighten(#dc3545, 8%);
+  font-size: 0.85rem;
+}
+
+

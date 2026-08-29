@@ -3,7 +3,13 @@
     <div class="hs-toolbar">
       <div class="hs-toolbar-title">
         <h5>Bill Management</h5>
-        <small>Tap a dining table to add items. Pick a date to see paid bills, totals, and deleted bills for that day.</small>
+        <small>Tap a dining table to add items. Split a table (e.g. L1 → L1A / L1B) when two groups share it. Payment totals live under Payments.</small>
+      </div>
+      <div class="hs-toolbar-actions">
+        <%= link_to payments_path(payment_date: @bill_date), class: "btn btn-hs-gold btn-sm hs-action-btn" do %>
+          <i class="bi bi-graph-up"></i>
+          <span>View payments</span>
+        <% end %>
       </div>
     </div>
   </div>
@@ -18,42 +24,41 @@
       <% end %>
     <% end %>
 
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-4">
-        <div class="hs-stat-box hs-stat-success">
-          <div class="hs-stat-label"><%= @bill_date == Date.current ? "Today's" : @bill_date.strftime("%d %b") %> total</div>
-          <div class="hs-stat-value">₹ <%= number_with_precision(@day_bills_sum, precision: 2) %></div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4">
-        <div class="hs-stat-box">
-          <div class="hs-stat-label">Paid bills</div>
-          <div class="hs-stat-value"><%= @day_bills.size %></div>
-        </div>
-      </div>
-      <div class="col-12 col-md-4">
-        <div class="hs-stat-box">
-          <div class="hs-stat-label">Deleted that day</div>
-          <div class="hs-stat-value"><%= @deleted_bills.size %></div>
-        </div>
-      </div>
-    </div>
-
     <h6 class="text-hs-gold mb-3">Dining tables</h6>
     <div class="hs-dining-grid mb-4">
       <% @dining_tables.each do |table| %>
         <% bill = table.active_bill %>
-        <%= link_to bill_path(table), class: "hs-dining-table #{bill ? 'is-active' : 'is-free'}" do %>
-          <span class="hs-dining-name"><%= table.name %></span>
-          <% if bill %>
-            <span class="hs-dining-status">Active</span>
-            <span class="hs-dining-meta">₹ <%= number_with_precision(bill.subtotal, precision: 2) %></span>
-            <span class="hs-dining-meta"><%= pluralize(bill.item_count, "item") %></span>
-          <% else %>
-            <span class="hs-dining-status">Free</span>
-            <span class="hs-dining-meta">Tap to open bill</span>
+        <div class="hs-dining-card <%= 'is-split' if table.split_child? %>">
+          <%= link_to bill_path(table), class: "hs-dining-table #{bill ? 'is-active' : 'is-free'}" do %>
+            <span class="hs-dining-name"><%= table.name %></span>
+            <% if bill %>
+              <span class="hs-dining-status">Active</span>
+              <span class="hs-dining-meta">₹ <%= number_with_precision(bill.subtotal, precision: 2) %></span>
+              <span class="hs-dining-meta"><%= pluralize(bill.item_count, "item") %></span>
+            <% else %>
+              <span class="hs-dining-status">Free</span>
+              <span class="hs-dining-meta">Tap to open bill</span>
+            <% end %>
           <% end %>
-        <% end %>
+
+          <div class="hs-dining-actions">
+            <% if table.can_split? %>
+              <%= button_to "Split #{table.name}A / #{table.name}B",
+                    split_dining_table_path(table, bill_date: @bill_date),
+                    method: :post,
+                    class: "btn btn-hs-outline btn-sm w-100",
+                    form: { data: { turbo_confirm: "Split #{table.name} into #{table.name}A and #{table.name}B for separate groups?" } } %>
+            <% elsif table.split_child? && table.can_merge? %>
+              <%= button_to "Merge to #{table.parent_dining_table.name}",
+                    merge_dining_table_path(table, bill_date: @bill_date),
+                    method: :post,
+                    class: "btn btn-hs-outline btn-sm w-100",
+                    form: { data: { turbo_confirm: "Merge #{table.parent_dining_table.name}A and #{table.parent_dining_table.name}B back into #{table.parent_dining_table.name}?" } } %>
+            <% elsif table.split_child? %>
+              <span class="hs-dining-split-hint">Split of <%= table.parent_dining_table&.name %></span>
+            <% end %>
+          </div>
+        </div>
       <% end %>
     </div>
 

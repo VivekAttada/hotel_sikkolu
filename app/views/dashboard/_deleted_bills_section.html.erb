@@ -16,7 +16,7 @@
         <% @deleted_bills.each do |bill| %>
           <tr>
             <td><%= bill.bill_number %></td>
-            <td><%= bill.dining_table.name %></td>
+            <td><%= bill.dining_table.display_name %></td>
             <td><%= bill.status.titleize %></td>
             <td><%= bill.item_count %></td>
             <td>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></td>

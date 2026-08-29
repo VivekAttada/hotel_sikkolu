@@ -6,6 +6,12 @@ Rails.application.routes.draw do
   get "grocery", to: "dashboard#grocery", as: :grocery
   get "checklist", to: "dashboard#checklist", as: :checklist
   get "bills", to: "dashboard#bills", as: :bills
+  get "payments", to: "dashboard#payments", as: :payments
+  get "settings", to: "dashboard#settings", as: :settings
+  patch "settings", to: "settings#update"
+  post "settings/email_report", to: "settings#send_email_report", as: :settings_email_report
+  get "takeaway", to: "dashboard#takeaway", as: :takeaway
+  post "takeaway/orders", to: "takeaways#create", as: :takeaway_orders
 
   post "groceries/import", to: "groceries#import", as: :import_groceries
   get "groceries/sample", to: "groceries#sample", as: :grocery_sample
@@ -22,6 +28,8 @@ Rails.application.routes.draw do
   get "exports/checklist", to: "exports#checklist", as: :export_checklist
   get "bills/tables/:id", to: "bills#show", as: :bill
   post "bills/tables/:id/items", to: "bills#add_item", as: :add_bill_item
+  post "dining_tables/:id/split", to: "dining_tables#split", as: :split_dining_table
+  post "dining_tables/:id/merge", to: "dining_tables#merge", as: :merge_dining_table
   patch "bills/:id/items/:line_item_id", to: "bills#update_item", as: :update_bill_item
   delete "bills/:id/items/:line_item_id", to: "bills#remove_item", as: :remove_bill_item
   post "bills/:id/pay", to: "bills#pay", as: :pay_bill

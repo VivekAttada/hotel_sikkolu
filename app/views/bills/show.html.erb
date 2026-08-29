@@ -8,7 +8,7 @@
           <% if @bill.active? %>
             <span class="text-hs-gold">Active</span>
           <% else %>
-            Paid
+            Paid<%= " · #{@bill.payment_method_label}" if @bill.payment_method.present? %>
           <% end %>
         </small>
       </div>
@@ -131,6 +131,26 @@
             <strong>₹ <%= number_with_precision(@bill.subtotal, precision: 2) %></strong>
           </div>
 
+          <% if @bill_removals.any? %>
+            <div class="hs-bill-removals mb-3">
+              <h6 class="text-danger mb-2">Removed after KOT</h6>
+              <ul class="hs-settle-removal-list mb-0">
+                <% @bill_removals.each do |removal| %>
+                  <li>
+                    <span><%= removal.item_name %> × <%= removal.quantity %></span>
+                    <span>₹ <%= number_with_precision(removal.line_total, precision: 2) %></span>
+                  </li>
+                <% end %>
+              </ul>
+              <% if @bill_removals.any? { |r| r.reason.present? } %>
+                <p class="hs-removal-reason mt-2 mb-0">
+                  <strong>Reason:</strong>
+                  <%= @bill_removals.map(&:reason).compact_blank.uniq.join(" / ") %>
+                </p>
+              <% end %>
+            </div>
+          <% end %>
+
           <% if @bill.active? %>
             <% pending_kot = @line_items.sum(&:pending_kot_quantity) %>
             <div class="d-grid gap-2 mb-2">
@@ -145,9 +165,66 @@
                 <% end %>
               <% end %>
             </div>
-            <%= button_to pay_bill_path(@bill), method: :post, class: "btn btn-hs-outline w-100 mb-2", form: { data: { turbo_confirm: "Mark bill as paid and generate PDF?" } } do %>
-              Mark as Paid & Generate PDF
-            <% end %>
+            <button type="button"
+                    class="btn btn-hs-outline w-100 mb-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#settleBillModal">
+              Settle & Generate PDF
+            </button>
+
+            <div class="modal fade hs-settle-modal" id="settleBillModal" tabindex="-1" aria-labelledby="settleBillModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="settleBillModalLabel">Settle bill</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <%= form_with url: pay_bill_path(@bill), method: :post do %>
+                    <div class="modal-body">
+                      <p class="hs-settle-intro mb-3">
+                        Total: <strong>₹ <%= number_with_precision(@bill.subtotal, precision: 2) %></strong>
+                      </p>
+
+                      <% if @bill_removals.any? %>
+                        <div class="hs-settle-removals mb-3">
+                          <p class="mb-2 text-danger fw-semibold">Items removed after KOT</p>
+                          <ul class="hs-settle-removal-list mb-3">
+                            <% @bill_removals.each do |removal| %>
+                              <li>
+                                <span><%= removal.item_name %> × <%= removal.quantity %></span>
+                                <span>₹ <%= number_with_precision(removal.line_total, precision: 2) %></span>
+                              </li>
+                            <% end %>
+                          </ul>
+                          <label class="form-label" for="removal_reason">Reason for removal <span class="text-danger">*</span></label>
+                          <%= text_area_tag :removal_reason, nil,
+                                id: "removal_reason",
+                                class: "form-control",
+                                rows: 3,
+                                required: true,
+                                placeholder: "Why were these items removed after KOT?" %>
+                        </div>
+                      <% end %>
+
+                      <p class="mb-2">How was this payment collected?</p>
+                      <div class="hs-payment-options">
+                        <% Bill::PAYMENT_METHODS.each do |method| %>
+                          <label class="hs-payment-option">
+                            <%= radio_button_tag :payment_method, method, method == "cash", required: true, class: "hs-payment-radio" %>
+                            <span><%= method == "upi" ? "UPI" : method.titleize %></span>
+                          </label>
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-hs-outline" data-bs-dismiss="modal">Cancel</button>
+                      <%= submit_tag "Settle & Generate PDF", class: "btn btn-hs-gold" %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
             <%= button_to "Delete bill", delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger w-100", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills." } } %>
           <% end %>
         <% else %>

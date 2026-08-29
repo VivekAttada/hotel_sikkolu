@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_29_150000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -39,6 +39,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "app_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.index ["key"], name: "index_app_settings_on_key", unique: true
+  end
+
   create_table "bill_line_items", force: :cascade do |t|
     t.integer "bill_id", null: false
     t.datetime "created_at", null: false
@@ -53,6 +61,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.index ["menu_item_id"], name: "index_bill_line_items_on_menu_item_id"
   end
 
+  create_table "bill_removals", force: :cascade do |t|
+    t.integer "bill_id", null: false
+    t.datetime "created_at", null: false
+    t.string "item_name", null: false
+    t.decimal "line_total", precision: 10, scale: 2, default: "0.0", null: false
+    t.integer "menu_item_id"
+    t.integer "quantity", null: false
+    t.text "reason"
+    t.datetime "removed_at", null: false
+    t.decimal "unit_price", precision: 10, scale: 2, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bill_id"], name: "index_bill_removals_on_bill_id"
+    t.index ["menu_item_id"], name: "index_bill_removals_on_menu_item_id"
+    t.index ["removed_at"], name: "index_bill_removals_on_removed_at"
+  end
+
   create_table "bills", force: :cascade do |t|
     t.string "bill_number", null: false
     t.datetime "created_at", null: false
@@ -60,6 +84,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.integer "dining_table_id", null: false
     t.datetime "opened_at", null: false
     t.datetime "paid_at"
+    t.string "payment_method"
     t.string "status", default: "active", null: false
     t.decimal "subtotal", precision: 10, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
@@ -68,6 +93,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.index ["dining_table_id", "status"], name: "index_bills_on_dining_table_id_and_status"
     t.index ["dining_table_id"], name: "index_bills_on_dining_table_id"
     t.index ["paid_at"], name: "index_bills_on_paid_at"
+    t.index ["payment_method"], name: "index_bills_on_payment_method"
     t.index ["status"], name: "index_bills_on_status"
   end
 
@@ -113,9 +139,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
+    t.integer "parent_dining_table_id"
     t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_dining_tables_on_name", unique: true
+    t.index ["parent_dining_table_id"], name: "index_dining_tables_on_parent_dining_table_id"
   end
 
   create_table "grocery_items", force: :cascade do |t|
@@ -197,9 +225,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "bill_line_items", "bills"
   add_foreign_key "bill_line_items", "menu_items"
+  add_foreign_key "bill_removals", "bills"
+  add_foreign_key "bill_removals", "menu_items"
   add_foreign_key "bills", "dining_tables"
   add_foreign_key "checklist_entries", "checklist_tasks"
   add_foreign_key "checklist_entries", "daily_checklists"
+  add_foreign_key "dining_tables", "dining_tables", column: "parent_dining_table_id"
   add_foreign_key "inventory_items", "daily_inventories"
   add_foreign_key "quantity_expenses", "inventory_items"
 end

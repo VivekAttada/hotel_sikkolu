@@ -1,6 +1,6 @@
 # Hotel Sikkolu
 
-A Rails 8 application for daily hotel operations — grocery management, daily checklists, inventory quantity tracking, and team information.
+A Rails 8 application for daily hotel operations — grocery management, daily checklists, bill management, and team information.
 
 ## Requirements
 
@@ -29,7 +29,7 @@ bin/rails server
 
 Open http://localhost:3000
 
-## Four Tabs
+## Tabs
 
 ### 1. Grocery
 Upload an Excel/CSV sheet with grocery details. All rows are stored in the `grocery_items` table. Each new upload replaces the previous list.
@@ -39,20 +39,13 @@ Upload an Excel/CSV sheet with grocery details. All rows are stored in the `groc
 ### 2. Checklist
 Daily checklist with checkboxes. Checked status is saved per day in `daily_checklists` and `checklist_entries`.
 
-### 3. Quantities
-Upload today's opening quantities from Excel. Record expenses during the day — each expense subtracts from available quantity. Repeat daily with a new upload.
-
-**Expected columns:** Item Name, Quantity, Unit
-
-### 4. Hotel Info
-Team profiles for Bindu, Harish, Manoj, and Abhishek with photos and descriptions.
+### 3. Bill Management
+Manage dining tables, bills, KOT, and payments.
 
 ## Database Schema
 
 ```
 checklist_tasks ──< checklist_entries >── daily_checklists
-inventory_items ──< quantity_expenses
-daily_inventories ──< inventory_items
 grocery_items (standalone)
 team_members (with Active Storage photo)
 ```
@@ -61,5 +54,3 @@ team_members (with Active Storage photo)
 
 Sample CSV files for testing uploads are in `sample_data/`:
 - `grocery_sample.csv`
-- `quantity_sample.csv`
-# hotel_sikkolu

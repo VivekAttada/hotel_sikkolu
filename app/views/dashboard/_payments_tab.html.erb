@@ -1,0 +1,166 @@
+<% date_label = @payment_date == Date.current ? "Today" : @payment_date.strftime("%d %b %Y") %>
+<% payment_max = [@day_cash_sum, @day_upi_sum, @day_card_sum, 0].max.to_f %>
+<% channel_max = [@day_dine_in_sum, @day_takeaway_sum, 0].max.to_f %>
+<% payment_total = [@day_bills_sum.to_f, 0.01].max %>
+
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Payments</h5>
+        <small>Daily collection overview — totals, payment methods, and dine-in vs takeaway.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <%= form_with url: payments_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <label class="hs-bill-date-label" for="payment_date">Payment date</label>
+      <%= date_field_tag :payment_date, @payment_date, class: "form-control form-control-sm", id: "payment_date", onchange: "this.form.requestSubmit()" %>
+      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% unless @payment_date == Date.current %>
+        <%= link_to "Today", payments_path(payment_date: Date.current), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
+
+    <section class="hs-pay-hero mb-4">
+      <div class="hs-pay-hero-label"><%= date_label %> collection</div>
+      <div class="hs-pay-hero-value">₹ <%= number_with_precision(@day_bills_sum, precision: 2) %></div>
+      <div class="hs-pay-hero-meta">
+        <span><%= pluralize(@day_bills.size, "paid bill") %></span>
+        <span class="hs-pay-dot">·</span>
+        <span><%= pluralize(@deleted_bills.size, "deleted bill") %></span>
+      </div>
+    </section>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <section class="hs-pay-panel">
+          <div class="hs-pay-panel-head">
+            <h6>Channel split</h6>
+            <small>Dine-in vs Take Away</small>
+          </div>
+
+          <div class="hs-pay-bars">
+            <% @channel_rows.each do |row| %>
+              <% pct = channel_max.positive? ? (row[:amount].to_f / channel_max * 100) : 0 %>
+              <% share = payment_total.positive? ? (row[:amount].to_f / payment_total * 100) : 0 %>
+              <div class="hs-pay-bar-row">
+                <div class="hs-pay-bar-meta">
+                  <span class="hs-pay-bar-label"><%= row[:label] %></span>
+                  <span class="hs-pay-bar-amount">₹ <%= number_with_precision(row[:amount], precision: 2) %></span>
+                </div>
+                <div class="hs-pay-bar-track">
+                  <div class="hs-pay-bar-fill tone-<%= row[:tone] %>" style="width: <%= pct.round(1) %>%"></div>
+                </div>
+                <div class="hs-pay-bar-foot">
+                  <span><%= pluralize(row[:count], "bill") %></span>
+                  <span><%= number_with_precision(share, precision: 0) %>%</span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="hs-pay-stack" aria-hidden="true">
+            <% if @day_bills_sum.positive? %>
+              <div class="hs-pay-stack-seg tone-gold" style="flex: <%= @day_dine_in_sum.to_f %>"></div>
+              <div class="hs-pay-stack-seg tone-cream" style="flex: <%= @day_takeaway_sum.to_f %>"></div>
+            <% else %>
+              <div class="hs-pay-stack-seg tone-empty" style="flex: 1"></div>
+            <% end %>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-md-6">
+        <section class="hs-pay-panel">
+          <div class="hs-pay-panel-head">
+            <h6>Payment methods</h6>
+            <small>Cash · UPI · Card</small>
+          </div>
+
+          <div class="hs-pay-bars">
+            <% @payment_method_rows.each do |row| %>
+              <% pct = payment_max.positive? ? (row[:amount].to_f / payment_max * 100) : 0 %>
+              <% share = payment_total.positive? ? (row[:amount].to_f / payment_total * 100) : 0 %>
+              <div class="hs-pay-bar-row">
+                <div class="hs-pay-bar-meta">
+                  <span class="hs-pay-bar-label"><%= row[:label] %></span>
+                  <span class="hs-pay-bar-amount">₹ <%= number_with_precision(row[:amount], precision: 2) %></span>
+                </div>
+                <div class="hs-pay-bar-track">
+                  <div class="hs-pay-bar-fill tone-<%= row[:tone] %>" style="width: <%= pct.round(1) %>%"></div>
+                </div>
+                <div class="hs-pay-bar-foot">
+                  <span><%= pluralize(row[:count], "bill") %></span>
+                  <span><%= number_with_precision(share, precision: 0) %>%</span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="hs-pay-stack" aria-hidden="true">
+            <% if @day_bills_sum.positive? %>
+              <div class="hs-pay-stack-seg tone-gold" style="flex: <%= @day_cash_sum.to_f %>" title="Cash"></div>
+              <div class="hs-pay-stack-seg tone-cream" style="flex: <%= @day_upi_sum.to_f %>" title="UPI"></div>
+              <div class="hs-pay-stack-seg tone-olive" style="flex: <%= @day_card_sum.to_f %>" title="Card"></div>
+            <% else %>
+              <div class="hs-pay-stack-seg tone-empty" style="flex: 1"></div>
+            <% end %>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <section class="hs-pay-panel mb-4">
+      <div class="hs-pay-panel-head">
+        <h6>Quick summary</h6>
+        <small><%= date_label %></small>
+      </div>
+      <div class="hs-pay-summary-grid">
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Total</span>
+          <strong>₹ <%= number_with_precision(@day_bills_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Dine-in</span>
+          <strong>₹ <%= number_with_precision(@day_dine_in_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Take Away</span>
+          <strong>₹ <%= number_with_precision(@day_takeaway_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Cash</span>
+          <strong>₹ <%= number_with_precision(@day_cash_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">UPI</span>
+          <strong>₹ <%= number_with_precision(@day_upi_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Card</span>
+          <strong>₹ <%= number_with_precision(@day_card_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Paid bills</span>
+          <strong><%= @day_bills.size %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Deleted</span>
+          <strong><%= @deleted_bills.size %></strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="hs-pay-panel">
+      <div class="hs-pay-panel-head">
+        <h6>Paid bills</h6>
+        <small><%= date_label %></small>
+      </div>
+      <%= render "dashboard/bills_history",
+            bills: @day_bills,
+            empty_message: "No paid bills for #{@payment_date.strftime('%d %b %Y')}." %>
+    </section>
+  </div>
+</div>
