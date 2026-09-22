@@ -1,0 +1,27 @@
+<% menu_category = local_assigns[:menu_category] %>
+<div class="hs-order-controls">
+  <div class="hs-qty-stepper">
+    <%= button_to update_bill_item_path(bill, line),
+          method: :patch,
+          params: { quantity: line.quantity - 1, menu_category: menu_category },
+          class: "btn btn-hs-outline btn-sm hs-qty-btn",
+          title: "Remove one" do %>
+      −
+    <% end %>
+    <span class="hs-qty-count"><%= line.quantity %></span>
+    <%= button_to update_bill_item_path(bill, line),
+          method: :patch,
+          params: { quantity: line.quantity + 1, menu_category: menu_category },
+          class: "btn btn-hs-outline btn-sm hs-qty-btn",
+          title: "Add one" do %>
+      +
+    <% end %>
+  </div>
+  <%= form_with url: update_bill_item_path(bill, line), method: :patch, class: "hs-note-form" do %>
+    <%= hidden_field_tag :menu_category, menu_category %>
+    <%= text_field_tag :note, line.note,
+          class: "form-control form-control-sm hs-line-note",
+          maxlength: 120,
+          onchange: "this.form.requestSubmit()" %>
+  <% end %>
+</div>

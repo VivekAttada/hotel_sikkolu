@@ -1,4 +1,5 @@
 class GroceriesController < ApplicationController
+  before_action :require_admin!
   before_action :set_grocery_item, only: [ :update, :destroy, :issue ]
 
   def import
@@ -7,7 +8,7 @@ class GroceriesController < ApplicationController
       return
     end
 
-    count = GroceryItem.import_from_spreadsheet(params[:file])
+    count = GroceryItem.import_from_spreadsheet(params[:file], user: current_user)
     redirect_to grocery_path, notice: "Successfully imported #{count} grocery items."
   rescue StandardError => e
     redirect_to grocery_path, alert: "Import failed: #{e.message}"
@@ -78,7 +79,7 @@ class GroceriesController < ApplicationController
   private
 
   def set_grocery_item
-    @grocery_item = GroceryItem.find(params[:id])
+    @grocery_item = GroceryItem.current.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to grocery_path, alert: "Grocery item not found."
   end
@@ -96,6 +97,6 @@ class GroceriesController < ApplicationController
   end
 
   def next_serial_no
-    (GroceryItem.maximum(:serial_no) || 0) + 1
+    (GroceryItem.current.maximum(:serial_no) || 0) + 1
   end
 end

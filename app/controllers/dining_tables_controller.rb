@@ -1,10 +1,11 @@
 class DiningTablesController < ApplicationController
+  before_action :require_bill_access!
   before_action :set_dining_table
 
   def split
     @dining_table.split!
     redirect_to bills_path(bill_date: params[:bill_date].presence || Date.current),
-                notice: "#{@dining_table.name} split into #{@dining_table.name}A and #{@dining_table.name}B."
+                notice: "#{@dining_table.name} is now two orders: #{@dining_table.name}A and #{@dining_table.name}B. After both bills are paid, #{@dining_table.name} comes back as one table."
   rescue ArgumentError => e
     redirect_to bills_path(bill_date: params[:bill_date].presence || Date.current), alert: e.message
   end

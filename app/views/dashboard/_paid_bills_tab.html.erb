@@ -1,0 +1,33 @@
+<% date_label = @bill_date == Bill.business_date_for ? "Today" : @bill_date.strftime("%d %b %Y") %>
+
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Paid Bills</h5>
+        <small>All settled bills for the selected date. Print or download a PDF for any bill.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <%= form_with url: paid_bills_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <label class="hs-bill-date-label" for="paid_bill_date">Bill date</label>
+      <%= date_field_tag :bill_date, @bill_date, class: "form-control form-control-sm", id: "paid_bill_date", onchange: "this.form.requestSubmit()" %>
+      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% unless @bill_date == Bill.business_date_for %>
+        <%= link_to "Today", paid_bills_path(bill_date: Bill.business_date_for), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
+
+    <h6 class="text-hs-gold mb-3">Paid bills — <%= date_label %></h6>
+    <%= render "dashboard/bills_history",
+          bills: @day_bills,
+          empty_message: "No paid bills for #{@bill_date.strftime('%d %b %Y')}." %>
+
+    <% if @due_bills.any? %>
+      <h6 class="text-hs-gold mt-4 mb-3">Due bills — <%= date_label %></h6>
+      <%= render "dashboard/bills_history", bills: @due_bills, empty_message: "No due bills." %>
+    <% end %>
+  </div>
+</div>

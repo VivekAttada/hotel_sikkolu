@@ -1,0 +1,35 @@
+<% compact = local_assigns.fetch(:compact, false) %>
+<div class="hs-bill-totals<%= " is-compact" if compact %>">
+  <div class="hs-bill-totals-row">
+    <span>Total</span>
+    <span>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></span>
+  </div>
+  <% if bill.discount_amount.to_d.positive? || bill.complementary? %>
+    <div class="hs-bill-totals-row">
+      <span>Discount<%= bill.discount_percent.to_d.positive? ? " #{number_with_precision(bill.discount_percent, precision: 1).sub(/\.0$/, '')}%" : "" %><%= " (NC)" if bill.complementary? %></span>
+      <span>− ₹ <%= number_with_precision(bill.discount_amount, precision: 2) %></span>
+    </div>
+  <% end %>
+  <div class="hs-bill-totals-row">
+    <span>CGST <%= Bill::CGST_PERCENT %>%</span>
+    <span>₹ <%= number_with_precision(bill.cgst_amount, precision: 2) %></span>
+  </div>
+  <div class="hs-bill-totals-row">
+    <span>SGST <%= Bill::SGST_PERCENT %>%</span>
+    <span>₹ <%= number_with_precision(bill.sgst_amount, precision: 2) %></span>
+  </div>
+  <div class="hs-bill-totals-row is-grand">
+    <span>Grand Total</span>
+    <strong>₹ <%= number_with_precision(bill.total, precision: 2) %></strong>
+  </div>
+  <% if bill.amount_tendered.positive? || bill.due? %>
+    <div class="hs-bill-totals-row">
+      <span>Collected</span>
+      <span>₹ <%= number_with_precision(bill.amount_tendered, precision: 2) %></span>
+    </div>
+    <div class="hs-bill-totals-row">
+      <span>Balance</span>
+      <span>₹ <%= number_with_precision(bill.balance_due, precision: 2) %></span>
+    </div>
+  <% end %>
+</div>

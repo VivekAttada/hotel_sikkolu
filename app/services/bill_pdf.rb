@@ -21,6 +21,7 @@ class BillPdf
       pdf.font "Courier"
 
       pdf.text "HOTEL SIKKOLU", size: 11, style: :bold, align: :center
+      pdf.text "GSTIN: #{Bill::GSTIN}", size: 8, align: :center
       pdf.text "Bill Receipt", size: 9, align: :center
       pdf.move_down 6
 
@@ -32,22 +33,44 @@ class BillPdf
       end
       pdf.text "Opened: #{@bill.opened_at.strftime('%d %b %Y, %I:%M %p')}", size: 8
       pdf.text "Paid: #{@bill.paid_at&.strftime('%d %b %Y, %I:%M %p') || '-'}", size: 8
-      pdf.text "Payment: #{@bill.payment_method_label}", size: 8
-      pdf.text "Status: #{@bill.status.titleize}", size: 8
       pdf.move_down 6
 
       rows = [ [ "Item", "Qty", "Rate", "Amt" ] ]
       @line_items.each do |line|
+        item_label = truncate(line.item_name, 18)
+        item_label = "#{item_label}\n#{truncate(line.note, 18)}" if line.note.present?
         rows << [
-          truncate(line.item_name, 18),
+          item_label,
           line.quantity.to_s,
           format("%.2f", line.unit_price),
           format("%.2f", line.line_total)
         ]
       end
       rows << [
-        { content: "TOTAL", colspan: 3, align: :right, font_style: :bold },
-        { content: "Rs. #{format('%.2f', @bill.subtotal)}", font_style: :bold }
+        { content: "Total", colspan: 3, align: :right },
+        format("%.2f", @bill.subtotal)
+      ]
+      if @bill.discount_amount.to_d.positive? || @bill.complementary?
+        discount_label = @bill.complementary? ? "Discount (NC)" : "Discount"
+        if @bill.discount_percent.to_d.positive? && !@bill.complementary?
+          discount_label = "Discount #{format('%g', @bill.discount_percent)}%"
+        end
+        rows << [
+          { content: discount_label, colspan: 3, align: :right },
+          format("- %.2f", @bill.discount_amount)
+        ]
+      end
+      rows << [
+        { content: "CGST #{Bill::CGST_PERCENT}%", colspan: 3, align: :right },
+        format("%.2f", @bill.cgst_amount)
+      ]
+      rows << [
+        { content: "SGST #{Bill::SGST_PERCENT}%", colspan: 3, align: :right },
+        format("%.2f", @bill.sgst_amount)
+      ]
+      rows << [
+        { content: "GRAND TOTAL", colspan: 3, align: :right, font_style: :bold },
+        { content: "Rs. #{format('%.2f', @bill.total)}", font_style: :bold }
       ]
 
       pdf.table(rows, width: pdf.bounds.width, header: true, cell_style: { size: 8, padding: [ 2, 2, 2, 2 ] }) do
@@ -98,8 +121,9 @@ class BillPdf
   private
 
   def estimated_page_height
-    line_count = 10 # header/meta
-    line_count += @line_items.size + 2
+    line_count = 9 # header/meta including GSTIN
+    line_count += @line_items.size + 5
+    line_count += @line_items.count { |line| line.note.present? }
     if @removals.any?
       line_count += @removals.size + 4
       line_count += 2 if @removals.any? { |r| r.reason.present? }

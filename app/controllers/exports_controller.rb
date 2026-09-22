@@ -1,4 +1,6 @@
 class ExportsController < ApplicationController
+  before_action :require_admin!
+
   def grocery
     items = GroceryItem.recent_first
     return redirect_with_alert("grocery", "No grocery data to export.") if items.none?

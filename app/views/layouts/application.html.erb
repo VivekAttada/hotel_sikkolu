@@ -22,7 +22,7 @@
     <% unless devise_controller? %>
       <nav class="navbar navbar-expand-lg hs-navbar shadow-sm">
         <div class="container">
-          <a class="hs-navbar-brand" href="<%= root_path %>">
+          <a class="hs-navbar-brand" href="<%= signed_in_home_path %>">
             <%= image_tag "hotel_sikkolu_logo.png", alt: "Hotel Sikkolu Logo", class: "hs-logo" %>
             <span class="hs-brand-text">
               <span class="hs-brand-sub">Hotel</span>
@@ -30,10 +30,10 @@
             </span>
           </a>
           <div class="d-flex align-items-center gap-3 ms-auto">
-            <span class="navbar-text hs-navbar-tagline d-none d-md-inline">
-              Daily grocery, checklist &amp; inventory management
-            </span>
             <% if user_signed_in? %>
+              <span class="navbar-text hs-navbar-tagline d-none d-md-inline">
+                <%= current_user.role_label %>
+              </span>
               <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "btn btn-hs-outline btn-sm hs-action-btn" %>
             <% end %>
           </div>

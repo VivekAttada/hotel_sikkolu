@@ -1,4 +1,4 @@
-<% content_for :title, "KOT — Table #{@bill.dining_table.name} — Hotel Sikkolu" %>
+<% content_for :title, "KOT #{@kot_number} — Table #{@bill.dining_table.name} — Hotel Sikkolu" %>
 
 <style>
   .hs-kot {
@@ -82,12 +82,13 @@
   <h1>HOTEL SIKKOLU</h1>
   <p class="subtitle">KITCHEN ORDER TICKET</p>
   <div class="hs-kot-center">
-    <span class="badge"><%= @kot_reprint ? "REPRINT — FULL ORDER" : "NEW KOT" %></span>
+    <span class="badge"><%= @kot_additional ? "ADDITIONAL KOT — NEW ITEMS ONLY" : "NEW KOT" %></span>
   </div>
+  <p class="subtitle">KOT No: <%= @kot_number %></p>
 
   <div class="hs-kot-meta">
     <div><strong><%= @bill.dining_table.takeaway? ? "TYPE" : "TABLE" %>:</strong> <%= @bill.dining_table.display_name %></div>
-    <div><strong>Bill:</strong> <%= @bill.bill_number %></div>
+    <div><strong>Bill No:</strong> <%= @bill.bill_number %></div>
     <div><strong>Time:</strong> <%= Time.current.strftime("%d %b %Y, %I:%M %p") %></div>
     <div><strong>Items:</strong> <%= @kot_rows.sum { |row| row[:quantity] } %></div>
   </div>
@@ -104,6 +105,9 @@
         <tr>
           <td>
             <span class="item-name"><%= row[:name] %></span>
+            <% if row[:note].present? %>
+              <span class="item-cat">Note: <%= row[:note] %></span>
+            <% end %>
             <% if row[:category].present? %>
               <span class="item-cat"><%= row[:category] %></span>
             <% end %>
@@ -114,5 +118,5 @@
     </tbody>
   </table>
 
-  <p class="hs-kot-footer">— Send to kitchen —</p>
+  <p class="hs-kot-footer"><%= @kot_additional ? "— Additional items only. Do not recook previous KOT. —" : "— Send to kitchen —" %></p>
 </div>

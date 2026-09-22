@@ -1,0 +1,42 @@
+<%# locals: categories, items_by_category, selected_category, category_path, add_path, extra_params %>
+<% extra_params = local_assigns.fetch(:extra_params, {}) %>
+
+<div class="hs-menu-accordion d-lg-none">
+  <% categories.each do |category| %>
+    <% open = selected_category == category %>
+    <% cat_id = menu_category_dom_id(category) %>
+    <div class="hs-menu-acc<%= " is-open" if open %>" id="<%= cat_id %>">
+      <%= link_to "#{category_path.call(category)}##{cat_id}",
+            class: "hs-menu-acc-toggle#{' is-open' if open}" do %>
+        <span><%= category %></span>
+        <i class="bi <%= open ? "bi-chevron-up" : "bi-chevron-down" %>"></i>
+      <% end %>
+      <% if open %>
+        <%= render "bills/menu_items",
+              items: items_by_category[category] || [],
+              category: category,
+              add_path: add_path,
+              extra_params: extra_params %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<div class="d-none d-lg-block">
+  <div class="hs-menu-category-nav mb-3">
+    <% categories.each do |category| %>
+      <%= link_to category,
+            category_path.call(category),
+            class: "btn btn-sm hs-action-btn #{selected_category == category ? 'btn-hs-gold' : 'btn-hs-outline'}" %>
+    <% end %>
+  </div>
+
+  <div class="hs-menu-category mb-3">
+    <div class="hs-menu-category-title"><%= selected_category %></div>
+    <%= render "bills/menu_items",
+          items: items_by_category[selected_category] || [],
+          category: selected_category,
+          add_path: add_path,
+          extra_params: extra_params %>
+  </div>
+</div>

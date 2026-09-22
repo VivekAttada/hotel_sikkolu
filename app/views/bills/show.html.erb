@@ -4,11 +4,13 @@
       <div class="hs-toolbar-title">
         <h5>Table <%= @dining_table.name %></h5>
         <small>
-          Bill <%= @bill.bill_number %> ·
+          Bill <%= @bill.bill_number %><% if @bill.latest_kot_number %> · KOT <%= @bill.latest_kot_number %><% end %> ·
           <% if @bill.active? %>
             <span class="text-hs-gold">Active</span>
+          <% elsif @bill.due? %>
+            <span class="text-danger">Due ₹ <%= number_with_precision(@bill.balance_due, precision: 2) %></span>
           <% else %>
-            Paid<%= " · #{@bill.payment_method_label}" if @bill.payment_method.present? %>
+            <%= @bill.status_label %><%= " · #{@bill.payment_method_label}" if @bill.payment_method.present? %>
           <% end %>
         </small>
       </div>
@@ -17,7 +19,16 @@
           <i class="bi bi-arrow-left"></i>
           <span>All tables</span>
         <% end %>
-        <% if @bill.paid? %>
+        <% if @bill.active? && @bill.bill_line_items.empty? && @dining_table.can_split? %>
+          <%= button_to split_dining_table_path(@dining_table, bill_date: Date.current),
+                method: :post,
+                class: "btn btn-hs-gold btn-sm hs-action-btn",
+                form: { data: { turbo_confirm: "Split #{@dining_table.name} into two orders (#{@dining_table.name}A and #{@dining_table.name}B)?" } } do %>
+            <i class="bi bi-layout-split"></i>
+            <span>Split</span>
+          <% end %>
+        <% end %>
+        <% if @bill.paid? && (current_user.admin? || current_user.manager? || @bill.paid_by_id == current_user.id || @bill.opened_by_id == current_user.id) %>
           <%= link_to bill_pdf_path(@bill), class: "btn btn-hs-gold btn-sm hs-action-btn", target: "_blank", rel: "noopener", data: { turbo: false } do %>
             <i class="bi bi-file-earmark-pdf"></i>
             <span>Download PDF</span>
@@ -27,10 +38,10 @@
             <span>Print</span>
           <% end %>
         <% end %>
-        <% unless @bill.deleted? %>
-          <%= button_to delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger btn-sm hs-action-btn", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills and free the table if active." } } do %>
+        <% if @bill.active? %>
+          <%= button_to delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger btn-sm hs-action-btn", params: { cancel_reason: @bill.kot_sent? ? "Cancelled after KOT" : nil }, form: { data: { turbo_confirm: @bill.kot_sent? ? "KOT already went to kitchen. Manager/admin only. Cancel this bill?" : "Cancel this empty or unpaid bill?" } } do %>
             <i class="bi bi-trash"></i>
-            <span>Delete bill</span>
+            <span>Cancel bill</span>
           <% end %>
         <% end %>
       </div>
@@ -41,40 +52,19 @@
     <div class="row g-4">
       <div class="col-lg-7">
         <h6 class="text-hs-gold mb-3">Menu</h6>
-        <% if @bill.active? %>
+        <% if @bill.open_on_table? %>
           <% if @menu_categories.any? %>
-            <div class="hs-menu-category-nav mb-3">
-              <% @menu_categories.each do |category| %>
-                <%= link_to category,
-                      bill_path(@dining_table, menu_category: category),
-                      class: "btn btn-sm hs-action-btn #{@selected_menu_category == category ? 'btn-hs-gold' : 'btn-hs-outline'}" %>
-              <% end %>
-            </div>
-
-            <% items = @menu_items_by_category[@selected_menu_category] || [] %>
-            <div class="hs-menu-category mb-3">
-              <div class="hs-menu-category-title"><%= @selected_menu_category %></div>
-              <div class="hs-menu-list">
-                <% items.each do |item| %>
-                  <div class="hs-menu-row">
-                    <div>
-                      <div class="hs-menu-name"><%= item.name %></div>
-                      <div class="hs-menu-price">₹ <%= number_with_precision(item.price, precision: 2) %></div>
-                    </div>
-                    <%= button_to "Add",
-                          add_bill_item_path(@dining_table),
-                          method: :post,
-                          params: { menu_item_id: item.id, menu_category: @selected_menu_category },
-                          class: "btn btn-hs-gold btn-sm" %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
+            <%= render "bills/menu",
+                  categories: @menu_categories,
+                  items_by_category: @menu_items_by_category,
+                  selected_category: @selected_menu_category,
+                  category_path: ->(category) { bill_path(@dining_table, menu_category: category) },
+                  add_path: add_bill_item_path(@dining_table) %>
           <% else %>
             <p class="text-hs-muted">No menu items available.</p>
           <% end %>
         <% else %>
-          <p class="text-hs-muted">This bill is paid. Menu is locked.</p>
+          <p class="text-hs-muted">This bill is closed. Menu is locked.</p>
         <% end %>
       </div>
 
@@ -86,9 +76,9 @@
               <thead>
                 <tr>
                   <th>Item</th>
-                  <th>Qty</th>
+                  <th>Qty / Note</th>
                   <th>Amount</th>
-                  <% if @bill.active? %><th></th><% end %>
+                  <% if @bill.open_on_table? %><th></th><% end %>
                 </tr>
               </thead>
               <tbody>
@@ -97,20 +87,22 @@
                     <td>
                       <div><%= line.item_name %></div>
                       <small class="text-hs-muted">₹ <%= number_with_precision(line.unit_price, precision: 2) %> each</small>
+                      <% if line.kot_sent_quantity.to_i.positive? && @bill.open_on_table? %>
+                        <small class="text-hs-muted d-block">KOT sent × <%= line.kot_sent_quantity %><%= " · new × #{line.pending_kot_quantity}" if line.kot_pending? %></small>
+                      <% end %>
+                      <% if line.note.present? && !@bill.open_on_table? %>
+                        <small class="hs-line-note-text d-block"><%= line.note %></small>
+                      <% end %>
                     </td>
                     <td>
-                      <% if @bill.active? %>
-                        <%= form_with url: update_bill_item_path(@bill, line), method: :patch, class: "hs-qty-form" do %>
-                          <%= hidden_field_tag :menu_category, @selected_menu_category %>
-                          <%= number_field_tag :quantity, line.quantity, min: 1, class: "form-control form-control-sm hs-qty-input" %>
-                          <%= submit_tag "Set", class: "btn btn-hs-outline btn-sm" %>
-                        <% end %>
+                      <% if @bill.open_on_table? %>
+                        <%= render "bills/order_line_controls", bill: @bill, line: line, menu_category: @selected_menu_category %>
                       <% else %>
                         <%= line.quantity %>
                       <% end %>
                     </td>
                     <td>₹ <%= number_with_precision(line.line_total, precision: 2) %></td>
-                    <% if @bill.active? %>
+                    <% if @bill.open_on_table? %>
                       <td class="text-end">
                         <%= button_to "×",
                               remove_bill_item_path(@bill, line),
@@ -126,9 +118,8 @@
             </table>
           </div>
 
-          <div class="hs-bill-total mb-3">
-            <span>Total</span>
-            <strong>₹ <%= number_with_precision(@bill.subtotal, precision: 2) %></strong>
+          <div class="mb-3">
+            <%= render "bills/totals", bill: @bill %>
           </div>
 
           <% if @bill_removals.any? %>
@@ -151,82 +142,16 @@
             </div>
           <% end %>
 
-          <% if @bill.active? %>
-            <% pending_kot = @line_items.sum(&:pending_kot_quantity) %>
-            <div class="d-grid gap-2 mb-2">
-              <%= button_to bill_kot_path(@bill), method: :post, class: "btn btn-hs-gold w-100", form: { data: { turbo: false } } do %>
-                <i class="bi bi-printer"></i>
-                Print KOT<%= " (#{pending_kot} new)" if pending_kot.positive? %>
-              <% end %>
-              <% if @line_items.any? { |line| line.kot_sent_quantity.to_i.positive? } %>
-                <%= link_to bill_kot_path(@bill, reprint: 1), class: "btn btn-hs-outline w-100", target: "_blank", rel: "noopener", data: { turbo: false } do %>
-                  <i class="bi bi-arrow-repeat"></i>
-                  Reprint full KOT
+            <%= render "bills/bill_checkout", bill: @bill, modal_id: "settleBillModal", title: "Settle and Save" %>
+
+            <% if @bill.active? %>
+              <%= form_with url: delete_bill_path(@bill), method: :delete, class: "mt-2" do %>
+                <% if @bill.kot_sent? %>
+                  <%= text_field_tag :cancel_reason, nil, class: "form-control form-control-sm mb-2", required: true, placeholder: "Reason to cancel after KOT" %>
                 <% end %>
+                <%= submit_tag "Cancel bill", class: "btn btn-outline-danger w-100", data: { turbo_confirm: "Cancel bill #{@bill.bill_number}?" } %>
               <% end %>
-            </div>
-            <button type="button"
-                    class="btn btn-hs-outline w-100 mb-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#settleBillModal">
-              Settle & Generate PDF
-            </button>
-
-            <div class="modal fade hs-settle-modal" id="settleBillModal" tabindex="-1" aria-labelledby="settleBillModalLabel" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="settleBillModalLabel">Settle bill</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <%= form_with url: pay_bill_path(@bill), method: :post do %>
-                    <div class="modal-body">
-                      <p class="hs-settle-intro mb-3">
-                        Total: <strong>₹ <%= number_with_precision(@bill.subtotal, precision: 2) %></strong>
-                      </p>
-
-                      <% if @bill_removals.any? %>
-                        <div class="hs-settle-removals mb-3">
-                          <p class="mb-2 text-danger fw-semibold">Items removed after KOT</p>
-                          <ul class="hs-settle-removal-list mb-3">
-                            <% @bill_removals.each do |removal| %>
-                              <li>
-                                <span><%= removal.item_name %> × <%= removal.quantity %></span>
-                                <span>₹ <%= number_with_precision(removal.line_total, precision: 2) %></span>
-                              </li>
-                            <% end %>
-                          </ul>
-                          <label class="form-label" for="removal_reason">Reason for removal <span class="text-danger">*</span></label>
-                          <%= text_area_tag :removal_reason, nil,
-                                id: "removal_reason",
-                                class: "form-control",
-                                rows: 3,
-                                required: true,
-                                placeholder: "Why were these items removed after KOT?" %>
-                        </div>
-                      <% end %>
-
-                      <p class="mb-2">How was this payment collected?</p>
-                      <div class="hs-payment-options">
-                        <% Bill::PAYMENT_METHODS.each do |method| %>
-                          <label class="hs-payment-option">
-                            <%= radio_button_tag :payment_method, method, method == "cash", required: true, class: "hs-payment-radio" %>
-                            <span><%= method == "upi" ? "UPI" : method.titleize %></span>
-                          </label>
-                        <% end %>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-hs-outline" data-bs-dismiss="modal">Cancel</button>
-                      <%= submit_tag "Settle & Generate PDF", class: "btn btn-hs-gold" %>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-
-            <%= button_to "Delete bill", delete_bill_path(@bill), method: :delete, class: "btn btn-outline-danger w-100", form: { data: { turbo_confirm: "Delete this bill? It will move to Deleted Bills." } } %>
-          <% end %>
+            <% end %>
         <% else %>
           <p class="text-hs-muted mb-0">No items yet. Add food from the menu.</p>
         <% end %>

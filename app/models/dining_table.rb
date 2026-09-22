@@ -36,7 +36,7 @@ class DiningTable < ApplicationRecord
 
   def can_split?
     return false if takeaway? || split_child? || currently_split?
-    return false if occupied?
+    return false if active_bill&.item_count.to_i.positive?
     return false if active_split_names.any? { |n| DiningTable.where(name: n, active: true).exists? }
 
     true
@@ -54,10 +54,10 @@ class DiningTable < ApplicationRecord
     raise ArgumentError, "Take Away cannot be split" if takeaway?
     raise ArgumentError, "This is already a split table" if split_child?
     raise ArgumentError, "Table is already split" if currently_split?
-    raise ArgumentError, "Settle or clear the active bill before splitting" if occupied?
     raise ArgumentError, "Table cannot be split right now" unless can_split?
 
     transaction do
+      existing_bill = active_bill
       SPLIT_SUFFIXES.each_with_index do |suffix, index|
         child = split_children.find_or_initialize_by(name: "#{name}#{suffix}")
         child.position = (position * 10) + index
@@ -66,6 +66,7 @@ class DiningTable < ApplicationRecord
         child.save!
       end
       update!(active: false)
+      discard_empty_bill!(existing_bill)
     end
 
     split_children.where(active: true).order(:position, :name)
@@ -86,15 +87,45 @@ class DiningTable < ApplicationRecord
     parent
   end
 
+  def collapse_split_if_settled!
+    parent = split_child? ? parent_dining_table : self
+    return unless parent&.currently_split?
+
+    parent.split_children.where(active: true).find_each do |child|
+      child.discard_empty_active_bill!
+      child.update!(active: false) unless child.reload.active_bill.present?
+    end
+
+    remaining = parent.split_children.where(active: true)
+    return if remaining.any? { |child| child.active_bill.present? }
+
+    remaining.find_each { |child| child.update!(active: false) }
+    parent.update!(active: true)
+    parent
+  end
+
   def active_bill
-    bills.active.order(opened_at: :desc).first
+    bills.open_on_table.order(opened_at: :desc).first
   end
 
   def occupied?
     active_bill.present?
   end
 
+  def discard_empty_active_bill!
+    discard_empty_bill!(active_bill)
+  end
+
   private
+
+  def discard_empty_bill!(bill)
+    return unless bill&.active?
+    return if bill.bill_line_items.exists?
+
+    bill.bill_line_items.delete_all
+    bill.kitchen_tickets.delete_all if bill.respond_to?(:kitchen_tickets)
+    bill.delete
+  end
 
   def active_split_names
     SPLIT_SUFFIXES.map { |suffix| "#{name}#{suffix}" }

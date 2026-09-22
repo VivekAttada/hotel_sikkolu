@@ -1,0 +1,32 @@
+<% modal_id = local_assigns.fetch(:modal_id, "settleBillModal") %>
+<% pending_kot = bill.bill_line_items.sum(&:pending_kot_quantity) %>
+<% kot_already_sent = bill.bill_line_items.any? { |line| line.kot_sent_quantity.to_i.positive? } %>
+
+<div class="d-grid gap-2 mb-2">
+  <% if pending_kot.positive? %>
+    <%= button_to bill_kot_path(bill), method: :post, class: "btn btn-hs-gold w-100", form: { target: "_blank", data: { turbo: false } } do %>
+      <i class="bi bi-printer"></i>
+      <% if kot_already_sent %>
+        Print new KOT (<%= pending_kot %> new)
+      <% else %>
+        Print KOT
+      <% end %>
+    <% end %>
+  <% elsif kot_already_sent %>
+    <p class="text-hs-muted small mb-0">All items on this bill already went to kitchen. Add a new item to print another KOT.</p>
+  <% end %>
+</div>
+
+<%= link_to bill_print_path(bill), class: "btn btn-hs-outline w-100 mb-2", target: "_blank", rel: "noopener", data: { turbo: false } do %>
+  <i class="bi bi-receipt"></i>
+  Print bill
+<% end %>
+
+<button type="button"
+        class="btn btn-hs-gold w-100 mb-2"
+        data-bs-toggle="modal"
+        data-bs-target="#<%= modal_id %>">
+  Settle and Save
+</button>
+
+<%= render "bills/settle_form", bill: bill, modal_id: modal_id, title: local_assigns.fetch(:title, "Settle and Save") %>

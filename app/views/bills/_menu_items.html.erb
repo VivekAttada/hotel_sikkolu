@@ -1,0 +1,15 @@
+<div class="hs-menu-list">
+  <% items.each do |item| %>
+    <div class="hs-menu-row">
+      <div>
+        <div class="hs-menu-name"><%= item.name %></div>
+        <div class="hs-menu-price">₹ <%= number_with_precision(item.price, precision: 2) %></div>
+      </div>
+      <%= button_to "Add",
+            add_path,
+            method: :post,
+            params: extra_params.merge(menu_item_id: item.id, menu_category: category),
+            class: "btn btn-hs-gold btn-sm" %>
+    </div>
+  <% end %>
+</div>

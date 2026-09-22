@@ -1,0 +1,89 @@
+<% modal_id = local_assigns.fetch(:modal_id, "settleBillModal") %>
+<% title = local_assigns.fetch(:title, "Settle and Save") %>
+<div class="modal fade hs-settle-modal" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_id %>Label" aria-hidden="true"
+     data-controller="discount-preview"
+     data-discount-preview-subtotal-value="<%= bill.subtotal %>"
+     data-discount-preview-cgst-rate-value="<%= Bill::CGST_RATE %>"
+     data-discount-preview-sgst-rate-value="<%= Bill::SGST_RATE %>">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="<%= modal_id %>Label"><%= title %></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with url: pay_bill_path(bill), method: :post do %>
+        <div class="modal-body">
+          <div class="hs-settle-intro mb-3">
+            <div class="hs-bill-totals is-compact">
+              <div class="hs-bill-totals-row">
+                <span>Items</span>
+                <span>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></span>
+              </div>
+              <div class="mb-2 mt-2">
+                <label class="form-label" for="<%= modal_id %>_discount_percent">Discount %</label>
+                <%= number_field_tag :discount_percent, bill.discount_percent,
+                      id: "#{modal_id}_discount_percent",
+                      class: "form-control",
+                      min: 0,
+                      max: 100,
+                      step: 0.5,
+                      data: { discount_preview_target: "percent", action: "input->discount-preview#update" } %>
+              </div>
+              <div class="hs-bill-totals-row">
+                <span>Discount</span>
+                <span data-discount-preview-target="discount">− ₹ <%= number_with_precision(bill.discount_amount, precision: 2) %></span>
+              </div>
+              <div class="hs-bill-totals-row">
+                <span>CGST <%= Bill::CGST_PERCENT %>%</span>
+                <span data-discount-preview-target="cgst">₹ <%= number_with_precision(bill.cgst_amount, precision: 2) %></span>
+              </div>
+              <div class="hs-bill-totals-row">
+                <span>SGST <%= Bill::SGST_PERCENT %>%</span>
+                <span data-discount-preview-target="sgst">₹ <%= number_with_precision(bill.sgst_amount, precision: 2) %></span>
+              </div>
+              <div class="hs-bill-totals-row is-grand">
+                <span>Final payment</span>
+                <strong data-discount-preview-target="grand">₹ <%= number_with_precision(bill.total, precision: 2) %></strong>
+              </div>
+            </div>
+          </div>
+
+          <% if bill.bill_removals.any? %>
+            <div class="hs-settle-removals mb-3">
+              <p class="mb-2 text-danger fw-semibold">Items removed after KOT</p>
+              <ul class="hs-settle-removal-list mb-3">
+                <% bill.bill_removals.each do |removal| %>
+                  <li>
+                    <span><%= removal.item_name %> × <%= removal.quantity %></span>
+                    <span>₹ <%= number_with_precision(removal.line_total, precision: 2) %></span>
+                  </li>
+                <% end %>
+              </ul>
+              <label class="form-label" for="<%= modal_id %>_removal_reason">Reason for removal <span class="text-danger">*</span></label>
+              <%= text_area_tag :removal_reason, nil,
+                    id: "#{modal_id}_removal_reason",
+                    class: "form-control",
+                    rows: 2,
+                    required: true,
+                    placeholder: "Why were these items removed after KOT?" %>
+            </div>
+          <% end %>
+
+          <p class="mb-2">Payment method</p>
+          <div class="hs-payment-options">
+            <% %w[cash upi card].each do |method| %>
+              <label class="hs-payment-option">
+                <%= radio_button_tag :payment_method, method, method == "cash", class: "hs-payment-radio" %>
+                <span><%= method == "upi" ? "UPI" : method.titleize %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-hs-outline" data-bs-dismiss="modal">Cancel</button>
+          <%= submit_tag "Settle and Save", class: "btn btn-hs-gold" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

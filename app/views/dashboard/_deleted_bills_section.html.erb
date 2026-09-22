@@ -19,7 +19,7 @@
             <td><%= bill.dining_table.display_name %></td>
             <td><%= bill.status.titleize %></td>
             <td><%= bill.item_count %></td>
-            <td>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></td>
+            <td>₹ <%= number_with_precision(bill.total, precision: 2) %></td>
             <td><%= bill.deleted_at&.strftime("%I:%M %p") %></td>
             <td class="text-end">
               <% if bill.status == "paid" %>

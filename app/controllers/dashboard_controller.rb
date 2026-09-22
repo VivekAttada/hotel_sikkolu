@@ -1,5 +1,10 @@
 class DashboardController < ApplicationController
   before_action :redirect_legacy_tab_param
+  before_action :authorize_dashboard_tab, except: :home
+
+  def home
+    redirect_to signed_in_home_path
+  end
 
   def grocery
     @active_tab = "grocery"
@@ -16,6 +21,18 @@ class DashboardController < ApplicationController
   def bills
     @active_tab = "bills"
     load_bills_data
+    render :index
+  end
+
+  def paid_bills
+    @active_tab = "paid_bills"
+    load_paid_bills_data
+    render :index
+  end
+
+  def bill_edits
+    @active_tab = "bill_edits"
+    load_bill_edits_data
     render :index
   end
 
@@ -39,6 +56,12 @@ class DashboardController < ApplicationController
 
   private
 
+  def authorize_dashboard_tab
+    return if current_user.can_access_tab?(action_name)
+
+    redirect_to signed_in_home_path, alert: "You don't have access to that page."
+  end
+
   def redirect_legacy_tab_param
     tab = params[:tab].to_s
     return if tab.blank?
@@ -49,6 +72,10 @@ class DashboardController < ApplicationController
       checklist_path(query)
     when "bills", "deleted_bills"
       bills_path(query)
+    when "paid_bills"
+      paid_bills_path(query)
+    when "bill_edits"
+      bill_edits_path(query)
     when "payments"
       payments_path(query)
     when "settings"
@@ -68,9 +95,10 @@ class DashboardController < ApplicationController
     @grocery_q = params[:grocery_q].to_s.strip
     @grocery_items = GroceryItem.recent_first
     @grocery_items = @grocery_items.where("LOWER(item_name) LIKE ?", "%#{@grocery_q.downcase}%") if @grocery_q.present?
-    @grocery_has_items = GroceryItem.exists?
-    @last_grocery_import = GroceryItem.maximum(:imported_at)
-    @editing_grocery = GroceryItem.find_by(id: params[:edit_grocery]) if params[:edit_grocery].present?
+    @grocery_has_items = GroceryItem.current.exists?
+    @last_grocery_import = GroceryImport.recent_first.first&.imported_at || GroceryItem.current.maximum(:imported_at)
+    @grocery_import_count = GroceryImport.count
+    @editing_grocery = GroceryItem.current.find_by(id: params[:edit_grocery]) if params[:edit_grocery].present?
     @new_grocery_item = GroceryItem.new
   end
 
@@ -95,26 +123,47 @@ class DashboardController < ApplicationController
 
   def load_bills_data
     @dining_tables = DiningTable.ordered.includes(:bills, :parent_dining_table, :split_children)
-    @bill_date = parse_date(params[:bill_date]) || Date.current
-    @day_bills = Bill.for_day(@bill_date).includes(:dining_table, :bill_line_items).recent_first
-    @deleted_bills = Bill.deleted_on(@bill_date).includes(:dining_table, :bill_line_items).recently_deleted
+    @bill_date = Bill.business_date_for
+    return unless current_user.can_view_paid_bills?
+
+    @due_bills = Bill.due_on(@bill_date).includes(:dining_table, :bill_line_items).recent_first
+    return unless current_user.admin?
+
+    @voided_bills = Bill.voided_on(@bill_date).includes(:dining_table, :bill_line_items, :voided_by).order(voided_at: :desc)
+    @deleted_bills = Bill.deleted_on(@bill_date).includes(:dining_table, :bill_line_items, :cancelled_by).recently_deleted
+  end
+
+  def load_paid_bills_data
+    @bill_date = parse_date(params[:bill_date]) || Bill.business_date_for
+    @day_bills = Bill.for_day(@bill_date).includes(:dining_table, :bill_line_items, :paid_by, :opened_by).recent_first
+    @due_bills = Bill.due_on(@bill_date).includes(:dining_table, :bill_line_items, :paid_by, :opened_by).recent_first
+  end
+
+  def load_bill_edits_data
+    @edit_date = parse_date(params[:edit_date]) || Bill.business_date_for
+    @bill_edits = BillEdit.for_day(@edit_date).includes(:user, bill: :dining_table).recent_first
   end
 
   def load_payments_data
-    @payment_date = parse_date(params[:payment_date]) || Date.current
-    @day_bills = Bill.for_day(@payment_date).includes(:dining_table, :bill_line_items).recent_first
-    @deleted_bills = Bill.deleted_on(@payment_date).includes(:dining_table, :bill_line_items).recently_deleted
+    @payment_date = parse_date(params[:payment_date]) || Bill.business_date_for
+    @day_bills = Bill.for_day(@payment_date).includes(:dining_table, :bill_line_items, :paid_by, :opened_by).recent_first
+    @due_bills = Bill.due_on(@payment_date).includes(:dining_table, :bill_line_items).recent_first
+    @voided_bills = Bill.voided_on(@payment_date).includes(:dining_table, :bill_line_items, :voided_by).order(voided_at: :desc)
+    @deleted_bills = Bill.deleted_on(@payment_date).includes(:dining_table, :bill_line_items, :cancelled_by).recently_deleted
 
-    @day_bills_sum = @day_bills.sum(:subtotal)
-    @day_cash_sum = @day_bills.where(payment_method: "cash").sum(:subtotal)
-    @day_upi_sum = @day_bills.where(payment_method: "upi").sum(:subtotal)
-    @day_card_sum = @day_bills.where(payment_method: "card").sum(:subtotal)
-    @day_cash_count = @day_bills.where(payment_method: "cash").count
-    @day_upi_count = @day_bills.where(payment_method: "upi").count
-    @day_card_count = @day_bills.where(payment_method: "card").count
+    @day_bills_sum = @day_bills.sum(:total)
+    @day_cash_sum = @day_bills.sum(:cash_amount)
+    @day_upi_sum = @day_bills.sum(:upi_amount)
+    @day_card_sum = @day_bills.sum(:card_amount)
+    @day_nc_sum = @day_bills.where(complementary: true).count
+    @day_due_sum = @due_bills.sum(:total)
+    @day_void_sum = @voided_bills.sum(:total)
+    @day_cash_count = @day_bills.where("cash_amount > 0").count
+    @day_upi_count = @day_bills.where("upi_amount > 0").count
+    @day_card_count = @day_bills.where("card_amount > 0").count
 
     takeaway = DiningTable.find_by(name: DiningTable::TAKEAWAY_NAME)
-    @day_takeaway_sum = takeaway ? @day_bills.where(dining_table_id: takeaway.id).sum(:subtotal) : 0
+    @day_takeaway_sum = takeaway ? @day_bills.where(dining_table_id: takeaway.id).sum(:total) : 0
     @day_takeaway_count = takeaway ? @day_bills.where(dining_table_id: takeaway.id).count : 0
     @day_dine_in_sum = @day_bills_sum - @day_takeaway_sum
     @day_dine_in_count = @day_bills.size - @day_takeaway_count
@@ -153,7 +202,7 @@ class DashboardController < ApplicationController
     @whatsapp_number = AppSetting.whatsapp_number
     @whatsapp_normalized = AppSetting.normalized_whatsapp_number
     @report_recipients = ResendDailyReport.recipients
-    @report_date = Date.current
+    @report_date = Bill.business_date_for
     @daily_report_body = DailyReport.body(@report_date)
     @resend_configured = ResendDailyReport.configured?
   end

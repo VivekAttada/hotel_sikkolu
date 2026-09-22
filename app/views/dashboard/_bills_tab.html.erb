@@ -3,80 +3,98 @@
     <div class="hs-toolbar">
       <div class="hs-toolbar-title">
         <h5>Bill Management</h5>
-        <small>Tap a dining table to add items. Split a table (e.g. L1 → L1A / L1B) when two groups share it. Payment totals live under Payments.</small>
+        <small>Tap a table to take an order. To split a table for two groups, open an empty table and tap Split beside All tables. After both bills are paid, the extra table goes away.</small>
       </div>
-      <div class="hs-toolbar-actions">
-        <%= link_to payments_path(payment_date: @bill_date), class: "btn btn-hs-gold btn-sm hs-action-btn" do %>
-          <i class="bi bi-graph-up"></i>
-          <span>View payments</span>
-        <% end %>
-      </div>
+      <% if can_view_paid_bills? %>
+        <div class="hs-toolbar-actions">
+          <%= link_to paid_bills_path, class: "btn btn-hs-gold btn-sm hs-action-btn" do %>
+            <i class="bi bi-journal-check"></i>
+            <span>Paid bills</span>
+          <% end %>
+          <% if current_user.admin? %>
+            <%= link_to payments_path(payment_date: @bill_date), class: "btn btn-hs-gold btn-sm hs-action-btn" do %>
+              <i class="bi bi-graph-up"></i>
+              <span>View payments</span>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 
   <div class="hs-card-body">
-    <%= form_with url: bills_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
-      <label class="hs-bill-date-label" for="bill_date">Bill date</label>
-      <%= date_field_tag :bill_date, @bill_date, class: "form-control form-control-sm", id: "bill_date", onchange: "this.form.requestSubmit()" %>
-      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
-      <% unless @bill_date == Date.current %>
-        <%= link_to "Today", bills_path(bill_date: Date.current), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
-      <% end %>
-    <% end %>
-
     <h6 class="text-hs-gold mb-3">Dining tables</h6>
     <div class="hs-dining-grid mb-4">
       <% @dining_tables.each do |table| %>
         <% bill = table.active_bill %>
         <div class="hs-dining-card <%= 'is-split' if table.split_child? %>">
-          <%= link_to bill_path(table), class: "hs-dining-table #{bill ? 'is-active' : 'is-free'}" do %>
+          <% occupied = bill.present? && bill.item_count.to_i.positive? %>
+          <%= link_to bill_path(table), class: "hs-dining-table #{occupied ? 'is-occupied' : 'is-empty'}" do %>
             <span class="hs-dining-name"><%= table.name %></span>
             <% if bill %>
-              <span class="hs-dining-status">Active</span>
-              <span class="hs-dining-meta">₹ <%= number_with_precision(bill.subtotal, precision: 2) %></span>
+              <span class="hs-dining-status">Bill <%= bill.bill_number %></span>
+              <span class="hs-dining-meta">₹ <%= number_with_precision(bill.total, precision: 2) %></span>
               <span class="hs-dining-meta"><%= pluralize(bill.item_count, "item") %></span>
             <% else %>
               <span class="hs-dining-status">Free</span>
               <span class="hs-dining-meta">Tap to open bill</span>
             <% end %>
-          <% end %>
-
-          <div class="hs-dining-actions">
-            <% if table.can_split? %>
-              <%= button_to "Split #{table.name}A / #{table.name}B",
-                    split_dining_table_path(table, bill_date: @bill_date),
-                    method: :post,
-                    class: "btn btn-hs-outline btn-sm w-100",
-                    form: { data: { turbo_confirm: "Split #{table.name} into #{table.name}A and #{table.name}B for separate groups?" } } %>
-            <% elsif table.split_child? && table.can_merge? %>
-              <%= button_to "Merge to #{table.parent_dining_table.name}",
-                    merge_dining_table_path(table, bill_date: @bill_date),
-                    method: :post,
-                    class: "btn btn-hs-outline btn-sm w-100",
-                    form: { data: { turbo_confirm: "Merge #{table.parent_dining_table.name}A and #{table.parent_dining_table.name}B back into #{table.parent_dining_table.name}?" } } %>
-            <% elsif table.split_child? %>
-              <span class="hs-dining-split-hint">Split of <%= table.parent_dining_table&.name %></span>
+            <% if bill&.due? %>
+              <span class="hs-dining-meta text-danger">Due</span>
             <% end %>
-          </div>
+          <% end %>
         </div>
       <% end %>
     </div>
 
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <h6 class="text-hs-gold mb-3">
-          Paid bills — <%= @bill_date == Date.current ? "Today" : @bill_date.strftime("%d %b %Y") %>
-        </h6>
-        <%= render "dashboard/bills_history",
-              bills: @day_bills,
-              empty_message: "No paid bills for #{@bill_date.strftime('%d %b %Y')}." %>
+    <% if can_view_paid_bills? %>
+      <div class="row g-4">
+        <% if current_user.admin? %>
+          <div class="col-12">
+            <h6 class="text-hs-gold mb-3">
+              Deleted / cancelled — <%= @bill_date == Bill.business_date_for ? "Today" : @bill_date.strftime("%d %b %Y") %>
+            </h6>
+            <%= render "dashboard/deleted_bills_section" %>
+          </div>
+        <% end %>
+        <% if @due_bills.any? %>
+          <div class="col-12">
+            <h6 class="text-hs-gold mb-3">Due bills</h6>
+            <%= render "dashboard/bills_history", bills: @due_bills, empty_message: "No due bills." %>
+          </div>
+        <% end %>
+        <% if current_user.admin? && @voided_bills.any? %>
+          <div class="col-12">
+            <h6 class="text-hs-gold mb-3">Voided bills (kept in books)</h6>
+            <div class="table-responsive">
+              <table class="table hs-table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Bill</th>
+                    <th>Total</th>
+                    <th>Reason</th>
+                    <th>By</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @voided_bills.each do |bill| %>
+                    <tr>
+                      <td><%= bill.bill_number %></td>
+                      <td>₹ <%= number_with_precision(bill.total, precision: 2) %></td>
+                      <td><%= bill.void_reason %></td>
+                      <td><%= bill.voided_by&.display_name %></td>
+                      <td>
+                        <%= button_to "Restore", restore_bill_path(bill), method: :post, class: "btn btn-hs-outline btn-sm", form: { data: { turbo_confirm: "Restore #{bill.bill_number} to collection?" } } %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <% end %>
       </div>
-      <div class="col-lg-6">
-        <h6 class="text-hs-gold mb-3">
-          Deleted bills — <%= @bill_date == Date.current ? "Today" : @bill_date.strftime("%d %b %Y") %>
-        </h6>
-        <%= render "dashboard/deleted_bills_section" %>
-      </div>
-    </div>
+    <% end %>
   </div>
 </div>

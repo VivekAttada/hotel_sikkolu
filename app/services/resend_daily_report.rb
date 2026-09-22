@@ -5,8 +5,7 @@ class ResendDailyReport
   class Error < StandardError; end
 
   API_URL = URI("https://api.resend.com/emails")
-
-  RECIPIENTS = [
+  DEFAULT_RECIPIENTS = [
     "potnuruhimabindu3@gmail.com",
     "anemhari18@gmail.com",
     "vivek.attada8@gmail.com"
@@ -17,17 +16,19 @@ class ResendDailyReport
   end
 
   def self.recipients
-    RECIPIENTS
+    env_list = ENV["REPORT_RECIPIENTS"].to_s.split(/[,\s]+/).map(&:strip).compact_blank
+    env_list.presence || DEFAULT_RECIPIENTS
   end
 
-  def self.deliver!(date: Date.current)
+  def self.deliver!(date: Bill.business_date_for)
     new(date: date).deliver!
   end
 
-  def initialize(date: Date.current)
+  def initialize(date: Bill.business_date_for)
     @date = date
     @api_key = ENV["RESEND_API_KEY"].to_s.strip
     @from = ENV.fetch("RESEND_FROM_EMAIL", "Hotel Sikkolu <reports@updates.sikkolu.com>")
+    @recipients = self.class.recipients
   end
 
   def deliver!
@@ -36,7 +37,7 @@ class ResendDailyReport
     report = DailyReport.new(@date)
     payload = {
       from: @from,
-      to: RECIPIENTS.dup,
+      to: @recipients.dup,
       subject: "Hotel Sikkolu daily report — #{@date.strftime('%d %b %Y')}",
       text: report.body,
       html: report.html_body
@@ -48,7 +49,7 @@ class ResendDailyReport
       raise Error, message
     end
 
-    RECIPIENTS
+    @recipients
   end
 
   private

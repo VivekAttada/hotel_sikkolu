@@ -8,6 +8,7 @@
           <th>Items</th>
           <th>Total</th>
           <th>Payment</th>
+          <th>Cashier</th>
           <th>Paid at</th>
           <th></th>
         </tr>
@@ -15,17 +16,37 @@
       <tbody>
         <% bills.each do |bill| %>
           <tr>
-            <td><%= bill.bill_number %></td>
+            <td>
+              <%= bill.bill_number %>
+              <% if bill.guest_name.present? %>
+                <div class="small text-hs-muted"><%= bill.guest_name %></div>
+              <% end %>
+            </td>
             <td><%= bill.dining_table.display_name %></td>
             <td><%= bill.item_count %></td>
-            <td>₹ <%= number_with_precision(bill.subtotal, precision: 2) %></td>
-            <td><%= bill.payment_method_label %></td>
+            <td>₹ <%= number_with_precision(bill.total, precision: 2) %></td>
+            <td>
+              <%= bill.payment_method_label %>
+              <% if bill.payment_method == "split" %>
+                <div class="small text-hs-muted">
+                  C <%= number_with_precision(bill.cash_amount, precision: 0) %>
+                  · U <%= number_with_precision(bill.upi_amount, precision: 0) %>
+                  · D <%= number_with_precision(bill.card_amount, precision: 0) %>
+                </div>
+              <% end %>
+            </td>
+            <td><%= bill.cashier_label || "—" %></td>
             <td><%= bill.paid_at&.strftime("%I:%M %p") %></td>
             <td class="text-end">
               <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
                 <%= link_to "PDF", bill_pdf_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
                 <%= link_to "Print", bill_print_path(bill), class: "btn btn-hs-outline btn-sm", target: "_blank", rel: "noopener", data: { turbo: false } %>
-                <%= button_to "Delete", delete_bill_path(bill), method: :delete, class: "btn btn-outline-danger btn-sm", form: { data: { turbo_confirm: "Delete bill #{bill.bill_number}? It will move to Deleted Bills." } } %>
+                <% if current_user.admin? && local_assigns.fetch(:allow_void, false) %>
+                  <%= form_with url: void_bill_path(bill), method: :post, class: "d-inline", data: { controller: "void-bill", void_bill_number_value: bill.bill_number, action: "submit->void-bill#confirm" } do %>
+                    <%= hidden_field_tag :void_reason, "" %>
+                    <%= submit_tag "Void", class: "btn btn-outline-danger btn-sm" %>
+                  <% end %>
+                <% end %>
               </div>
             </td>
           </tr>

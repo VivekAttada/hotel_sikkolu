@@ -4,7 +4,7 @@
       <div class="hs-toolbar-title">
         <h5>Grocery Inventory</h5>
         <% if @last_grocery_import %>
-          <small>Last imported: <%= @last_grocery_import.strftime("%d %b %Y, %I:%M %p") %></small>
+          <small>Last imported: <%= @last_grocery_import.strftime("%d %b %Y, %I:%M %p") %><%= " · #{@grocery_import_count} saved imports" if @grocery_import_count.to_i.positive? %></small>
         <% else %>
           <small>Download the sample sheet, fill it, then upload — or add items manually</small>
         <% end %>

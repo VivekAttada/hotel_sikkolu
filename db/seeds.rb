@@ -90,12 +90,43 @@ end
 # Remove any leftover old team names
 TeamMember.where(name: [ "Bindu", "Harish" ]).destroy_all
 
-puts "Seeding login user..."
-User.find_or_create_by!(username: "hotel_sikkolu") do |user|
-  user.email = "hotel_sikkolu@sikkolu.local"
-  user.password = "hotel_sikkolu@123"
-  user.password_confirmation = "hotel_sikkolu@123"
+puts "Seeding login users..."
+login_accounts = [
+  {
+    username: "hotel_sikkolu_admin",
+    email: "hotel_sikkolu@admin.com",
+    password: "abhms@123#",
+    role: "admin",
+    name: "Admin"
+  },
+  {
+    username: "hotel_sikkolu_staff",
+    email: "hotel_sikkolu@staff.com",
+    password: "staff@123#",
+    role: "staff",
+    name: "Staff"
+  },
+  {
+    username: "hotel_sikkolu_manager",
+    email: "hotel_sikkolu@manager.com",
+    password: "managers@123#",
+    role: "manager",
+    name: "Manager"
+  }
+]
+
+login_accounts.each do |attrs|
+  user = User.find_or_initialize_by(email: attrs[:email])
+  user.username = attrs[:username]
+  user.role = attrs[:role]
+  user.name = attrs[:name]
+  user.password = attrs[:password]
+  user.password_confirmation = attrs[:password]
+  user.save!
 end
+
+legacy = User.find_by(username: "hotel_sikkolu")
+legacy&.update!(role: "admin")
 
 puts "Seeding dining tables R1–R4, M1–M2, L1–L4..."
 seed_table_names = %w[R1 R2 R3 R4 M1 M2 L1 L2 L3 L4]

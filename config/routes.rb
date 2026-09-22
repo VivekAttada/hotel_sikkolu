@@ -2,10 +2,12 @@ Rails.application.routes.draw do
   devise_for :users, skip: [ :registrations ]
   get "up" => "rails/health#show", as: :rails_health_check
 
-  root "dashboard#grocery"
+  root "dashboard#home"
   get "grocery", to: "dashboard#grocery", as: :grocery
   get "checklist", to: "dashboard#checklist", as: :checklist
   get "bills", to: "dashboard#bills", as: :bills
+  get "paid_bills", to: "dashboard#paid_bills", as: :paid_bills
+  get "bill_edits", to: "dashboard#bill_edits", as: :bill_edits
   get "payments", to: "dashboard#payments", as: :payments
   get "settings", to: "dashboard#settings", as: :settings
   patch "settings", to: "settings#update"
@@ -33,8 +35,11 @@ Rails.application.routes.draw do
   patch "bills/:id/items/:line_item_id", to: "bills#update_item", as: :update_bill_item
   delete "bills/:id/items/:line_item_id", to: "bills#remove_item", as: :remove_bill_item
   post "bills/:id/pay", to: "bills#pay", as: :pay_bill
+  post "bills/:id/void", to: "bills#void", as: :void_bill
+  post "bills/:id/restore", to: "bills#restore", as: :restore_bill
+  patch "bills/:id/guest", to: "bills#guest", as: :bill_guest
   delete "bills/:id", to: "bills#destroy", as: :delete_bill
   get "bills/:id/pdf", to: "bills#pdf", as: :bill_pdf
   get "bills/:id/print", to: "bills#print", as: :bill_print
-  match "bills/:id/kot", to: "bills#kot", via: [ :get, :post ], as: :bill_kot
+  post "bills/:id/kot", to: "bills#kot", as: :bill_kot
 end

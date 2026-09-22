@@ -11,12 +11,12 @@
     </div>
 
     <h1 class="hs-login-title">Sign in</h1>
-    <p class="hs-login-subtitle">Access grocery, checklist &amp; inventory</p>
+    <p class="hs-login-subtitle">Admin, manager &amp; staff access</p>
 
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "hs-login-form" }) do |f| %>
       <div class="mb-3">
-        <%= f.label :username, "Username", class: "form-label" %>
-        <%= f.text_field :username, autofocus: true, autocomplete: "username", class: "form-control", required: true %>
+        <%= f.label :email, "Email", class: "form-label" %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "username", class: "form-control", required: true %>
       </div>
 
       <div class="mb-3">

@@ -1,4 +1,5 @@
 class ChecklistsController < ApplicationController
+  before_action :require_admin!
   before_action :set_entry, only: [ :update, :upload_photo, :destroy_photo ]
 
   def update

@@ -19,6 +19,12 @@
     text-align: center;
     font-size: 11px;
   }
+  .hs-print-gstin {
+    margin: 0 0 6px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
   .hs-print-meta {
     margin-bottom: 6px;
     font-size: 10px;
@@ -50,6 +56,13 @@
   }
   .hs-print-bill tfoot td {
     border-bottom: none;
+    padding-top: 3px;
+  }
+  .hs-print-bill tfoot tr.hs-print-sub td {
+    border-top: 1px dashed #111;
+    font-weight: 400;
+  }
+  .hs-print-bill tfoot tr.hs-print-grand td {
     border-top: 1px solid #111;
     font-weight: 700;
     padding-top: 4px;
@@ -87,7 +100,8 @@
 
 <div class="hs-print-bill">
   <h1>HOTEL SIKKOLU</h1>
-  <p class="subtitle">Bill Receipt</p>
+  <p class="hs-print-gstin"><strong>GSTIN:</strong> <%= Bill::GSTIN %></p>
+  <p class="subtitle"><%= @bill.paid? ? "Bill Receipt" : "Bill Receipt — Unpaid" %></p>
 
   <div class="hs-print-meta">
     <div><strong>Bill No:</strong> <%= @bill.bill_number %></div>
@@ -97,9 +111,13 @@
       <div><strong>Table:</strong> <%= @bill.dining_table.name %></div>
     <% end %>
     <div><strong>Opened:</strong> <%= @bill.opened_at.strftime("%d %b %Y, %I:%M %p") %></div>
-    <div><strong>Paid:</strong> <%= @bill.paid_at&.strftime("%d %b %Y, %I:%M %p") || "—" %></div>
-    <div><strong>Payment:</strong> <%= @bill.payment_method_label %></div>
-    <div><strong>Status:</strong> <%= @bill.status.titleize %></div>
+    <div><strong>Paid:</strong> <%= @bill.paid_at&.strftime("%d %b %Y, %I:%M %p") || "Not settled" %></div>
+    <% if @bill.guest_name.present? || @bill.guest_phone.present? %>
+      <div><strong>Guest:</strong> <%= [ @bill.guest_name, @bill.guest_phone ].compact.join(" · ") %></div>
+    <% end %>
+    <% if @bill.cashier_label.present? %>
+      <div><strong>Cashier:</strong> <%= @bill.cashier_label %></div>
+    <% end %>
   </div>
 
   <table>
@@ -114,7 +132,12 @@
     <tbody>
       <% @line_items.each do |line| %>
         <tr>
-          <td><%= line.item_name %></td>
+          <td>
+            <%= line.item_name %>
+            <% if line.note.present? %>
+              <div style="font-size: 9px; font-style: italic;">Note: <%= line.note %></div>
+            <% end %>
+          </td>
           <td class="num"><%= line.quantity %></td>
           <td class="num"><%= number_with_precision(line.unit_price, precision: 2) %></td>
           <td class="num"><%= number_with_precision(line.line_total, precision: 2) %></td>
@@ -122,9 +145,27 @@
       <% end %>
     </tbody>
     <tfoot>
-      <tr>
-        <td colspan="3" class="num">TOTAL</td>
+      <tr class="hs-print-sub">
+        <td colspan="3" class="num">Total</td>
         <td class="num">₹ <%= number_with_precision(@bill.subtotal, precision: 2) %></td>
+      </tr>
+      <% if @bill.discount_amount.to_d.positive? || @bill.complementary? %>
+        <tr class="hs-print-sub">
+          <td colspan="3" class="num">Discount<%= @bill.discount_percent.to_d.positive? ? " #{number_with_precision(@bill.discount_percent, precision: 1).sub(/\.0$/, '')}%" : "" %><%= " (NC)" if @bill.complementary? %></td>
+          <td class="num">− ₹ <%= number_with_precision(@bill.discount_amount, precision: 2) %></td>
+        </tr>
+      <% end %>
+      <tr class="hs-print-sub">
+        <td colspan="3" class="num">CGST <%= Bill::CGST_PERCENT %>%</td>
+        <td class="num">₹ <%= number_with_precision(@bill.cgst_amount, precision: 2) %></td>
+      </tr>
+      <tr class="hs-print-sub">
+        <td colspan="3" class="num">SGST <%= Bill::SGST_PERCENT %>%</td>
+        <td class="num">₹ <%= number_with_precision(@bill.sgst_amount, precision: 2) %></td>
+      </tr>
+      <tr class="hs-print-grand">
+        <td colspan="3" class="num">GRAND TOTAL</td>
+        <td class="num">₹ <%= number_with_precision(@bill.total, precision: 2) %></td>
       </tr>
     </tfoot>
   </table>

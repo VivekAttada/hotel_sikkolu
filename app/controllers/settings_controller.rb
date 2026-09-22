@@ -1,4 +1,6 @@
 class SettingsController < ApplicationController
+  before_action :require_admin!
+
   def update
     number = params[:whatsapp_number].to_s.strip
     digits = number.gsub(/\D/, "")
@@ -13,7 +15,7 @@ class SettingsController < ApplicationController
   end
 
   def send_email_report
-    recipients = ResendDailyReport.deliver!(date: Date.current)
+    recipients = ResendDailyReport.deliver!(date: Bill.business_date_for)
     redirect_to settings_path, notice: "Daily report emailed to #{recipients.join(', ')}."
   rescue ResendDailyReport::Error => e
     redirect_to settings_path, alert: e.message

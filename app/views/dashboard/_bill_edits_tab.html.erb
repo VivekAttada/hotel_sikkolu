@@ -1,0 +1,54 @@
+<% date_label = @edit_date == Bill.business_date_for ? "Today" : @edit_date.strftime("%d %b %Y") %>
+
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Bill Edit History</h5>
+        <small>Every add, quantity change, removal, discount, and settlement is stored here for admin review.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <%= form_with url: bill_edits_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <label class="hs-bill-date-label" for="edit_date">Date</label>
+      <%= date_field_tag :edit_date, @edit_date, class: "form-control form-control-sm", id: "edit_date", onchange: "this.form.requestSubmit()" %>
+      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% unless @edit_date == Bill.business_date_for %>
+        <%= link_to "Today", bill_edits_path(edit_date: Bill.business_date_for), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
+
+    <% if @bill_edits.any? %>
+      <div class="table-responsive">
+        <table class="table hs-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Bill</th>
+              <th>Table</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @bill_edits.each do |edit| %>
+              <tr>
+                <td><%= edit.created_at.strftime("%I:%M %p") %></td>
+                <td><%= edit.bill_number %></td>
+                <td><%= edit.bill&.dining_table&.display_name || "—" %></td>
+                <td><%= edit.actor_label %></td>
+                <td><%= edit.action_label %></td>
+                <td><%= edit.summary %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-hs-muted small mb-0">No bill edits for <%= date_label %>.</p>
+    <% end %>
+  </div>
+</div>

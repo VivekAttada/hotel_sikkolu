@@ -1,4 +1,4 @@
-<% date_label = @payment_date == Date.current ? "Today" : @payment_date.strftime("%d %b %Y") %>
+<% date_label = @payment_date == Bill.business_date_for ? "Today" : @payment_date.strftime("%d %b %Y") %>
 <% payment_max = [@day_cash_sum, @day_upi_sum, @day_card_sum, 0].max.to_f %>
 <% channel_max = [@day_dine_in_sum, @day_takeaway_sum, 0].max.to_f %>
 <% payment_total = [@day_bills_sum.to_f, 0.01].max %>
@@ -18,8 +18,8 @@
       <label class="hs-bill-date-label" for="payment_date">Payment date</label>
       <%= date_field_tag :payment_date, @payment_date, class: "form-control form-control-sm", id: "payment_date", onchange: "this.form.requestSubmit()" %>
       <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
-      <% unless @payment_date == Date.current %>
-        <%= link_to "Today", payments_path(payment_date: Date.current), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% unless @payment_date == Bill.business_date_for %>
+        <%= link_to "Today", payments_path(payment_date: Bill.business_date_for), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
       <% end %>
     <% end %>
 
@@ -150,6 +150,14 @@
           <span class="hs-pay-summary-label">Deleted</span>
           <strong><%= @deleted_bills.size %></strong>
         </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Due</span>
+          <strong>₹ <%= number_with_precision(@day_due_sum, precision: 2) %></strong>
+        </div>
+        <div class="hs-pay-summary-item">
+          <span class="hs-pay-summary-label">Voided</span>
+          <strong><%= @voided_bills.size %></strong>
+        </div>
       </div>
     </section>
 
@@ -160,7 +168,18 @@
       </div>
       <%= render "dashboard/bills_history",
             bills: @day_bills,
+            allow_void: current_user.admin?,
             empty_message: "No paid bills for #{@payment_date.strftime('%d %b %Y')}." %>
+    </section>
+
+    <section class="hs-pay-panel mt-4">
+      <div class="hs-pay-panel-head">
+        <h6>Due bills</h6>
+        <small>Still outstanding</small>
+      </div>
+      <%= render "dashboard/bills_history",
+            bills: @due_bills,
+            empty_message: "No due bills for #{@payment_date.strftime('%d %b %Y')}." %>
     </section>
   </div>
 </div>
