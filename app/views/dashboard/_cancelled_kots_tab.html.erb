@@ -1,0 +1,63 @@
+<% date_label = @cancelled_kot_date == Bill.business_date_for ? "Today" : @cancelled_kot_date.strftime("%d %b %Y") %>
+
+<div class="hs-card">
+  <div class="hs-card-header">
+    <div class="hs-toolbar">
+      <div class="hs-toolbar-title">
+        <h5>Cancelled KOTs</h5>
+        <small>Items sent to kitchen and later cancelled. These stay off the guest bill and are listed here for admin.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-card-body">
+    <%= form_with url: cancelled_kots_path, method: :get, class: "hs-bill-date-filter mb-4" do %>
+      <label class="hs-bill-date-label" for="kot_date">Date</label>
+      <%= date_field_tag :kot_date, @cancelled_kot_date, class: "form-control form-control-sm", id: "kot_date", onchange: "this.form.requestSubmit()" %>
+      <%= submit_tag "View", class: "btn btn-hs-gold btn-sm hs-action-btn" %>
+      <% unless @cancelled_kot_date == Bill.business_date_for %>
+        <%= link_to "Today", cancelled_kots_path(kot_date: Bill.business_date_for), class: "btn btn-hs-outline btn-sm hs-action-btn" %>
+      <% end %>
+    <% end %>
+
+    <% if @cancelled_kots.any? %>
+      <div class="table-responsive">
+        <table class="table hs-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Bill</th>
+              <th>Table</th>
+              <th>Cancelled KOT item</th>
+              <th>Qty</th>
+              <th>Amount</th>
+              <th>Reason</th>
+              <th>By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @cancelled_kots.each do |removal| %>
+              <tr>
+                <td><%= removal.removed_at&.strftime("%I:%M %p") %></td>
+                <td>
+                  <%= removal.bill&.bill_number || "—" %>
+                  <% if removal.bill&.guest_name.present? %>
+                    <div class="small text-hs-muted"><%= removal.bill.guest_name %></div>
+                  <% end %>
+                </td>
+                <td><%= removal.bill&.dining_table&.display_name || "—" %></td>
+                <td><%= removal.item_name %></td>
+                <td><%= removal.quantity %></td>
+                <td>₹ <%= number_with_precision(removal.line_total, precision: 2) %></td>
+                <td><%= removal.reason.presence || "—" %></td>
+                <td><%= removal.actor_label %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-hs-muted small mb-0">No cancelled KOTs for <%= date_label %>.</p>
+    <% end %>
+  </div>
+</div>

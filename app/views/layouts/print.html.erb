@@ -20,24 +20,38 @@
       }
       .print-toolbar {
         display: flex;
+        flex-wrap: wrap;
         gap: 0.5rem;
         margin-bottom: 0.75rem;
       }
       .print-toolbar button,
       .print-toolbar a {
         font-family: system-ui, sans-serif;
-        font-size: 0.875rem;
-        padding: 0.45rem 0.85rem;
+        font-size: 1rem;
+        padding: 0.7rem 0.9rem;
         border: 1px solid #333;
         background: #fff;
         color: #111;
         text-decoration: none;
         cursor: pointer;
         border-radius: 0.25rem;
+        min-height: 44px;
       }
       .print-toolbar button.primary {
         background: #111;
         color: #fff;
+        flex: 1 1 12rem;
+      }
+      .print-hint {
+        font-family: system-ui, sans-serif;
+        font-size: 0.85rem;
+        line-height: 1.35;
+        color: #333;
+        margin: 0 0 0.85rem;
+        padding: 0.65rem 0.75rem;
+        border: 1px dashed #999;
+        border-radius: 0.35rem;
+        background: #f7f7f7;
       }
       .print-sheet {
         width: 80mm;
@@ -49,7 +63,8 @@
         margin: 3mm;
       }
       @media print {
-        .print-toolbar { display: none !important; }
+        .print-toolbar,
+        .print-hint { display: none !important; }
         html, body {
           width: 80mm;
           margin: 0 !important;
@@ -57,6 +72,7 @@
           height: auto !important;
           overflow: visible !important;
           background: #fff !important;
+          color: #000 !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
@@ -73,11 +89,17 @@
       <button type="button" class="primary" onclick="window.print()">Print</button>
       <a href="javascript:window.close()">Close</a>
     </div>
+    <p class="print-hint">
+      <strong>Phone (Chrome):</strong> tap <em>Print</em>, then pick a printer on the same Wi‑Fi, or choose <em>Save as PDF</em>.
+      A USB printer plugged into a desktop will not show on the phone.
+    </p>
     <div class="print-sheet">
       <%= yield %>
     </div>
     <script>
       window.addEventListener("load", function() {
+        var phone = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+        if (phone) return;
         window.setTimeout(function() { window.print(); }, 250);
       });
     </script>

@@ -42,6 +42,13 @@
         <% end %>
       </li>
     <% end %>
+    <% if current_user_can?(:cancelled_kots) %>
+      <li class="nav-item" role="presentation">
+        <%= link_to cancelled_kots_path, class: "nav-link #{'active' if @active_tab == 'cancelled_kots'}", id: "cancelled-kots-tab" do %>
+          <i class="bi bi-x-octagon d-md-none me-1"></i>Cancelled KOTs
+        <% end %>
+      </li>
+    <% end %>
     <% if current_user_can?(:takeaway) %>
       <li class="nav-item" role="presentation">
         <%= link_to takeaway_path, class: "nav-link #{'active' if @active_tab == 'takeaway'}", id: "takeaway-tab" do %>

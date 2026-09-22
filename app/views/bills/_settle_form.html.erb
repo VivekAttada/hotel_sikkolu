@@ -48,27 +48,6 @@
             </div>
           </div>
 
-          <% if bill.bill_removals.any? %>
-            <div class="hs-settle-removals mb-3">
-              <p class="mb-2 text-danger fw-semibold">Items removed after KOT</p>
-              <ul class="hs-settle-removal-list mb-3">
-                <% bill.bill_removals.each do |removal| %>
-                  <li>
-                    <span><%= removal.item_name %> × <%= removal.quantity %></span>
-                    <span>₹ <%= number_with_precision(removal.line_total, precision: 2) %></span>
-                  </li>
-                <% end %>
-              </ul>
-              <label class="form-label" for="<%= modal_id %>_removal_reason">Reason for removal <span class="text-danger">*</span></label>
-              <%= text_area_tag :removal_reason, nil,
-                    id: "#{modal_id}_removal_reason",
-                    class: "form-control",
-                    rows: 2,
-                    required: true,
-                    placeholder: "Why were these items removed after KOT?" %>
-            </div>
-          <% end %>
-
           <p class="mb-2">Payment method</p>
           <div class="hs-payment-options">
             <% %w[cash upi card].each do |method| %>

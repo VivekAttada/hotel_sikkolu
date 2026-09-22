@@ -141,8 +141,8 @@ class BillsController < ApplicationController
   end
 
   def pdf
-    unless @bill.status == "paid" && !@bill.voided? && !@bill.deleted?
-      redirect_back_or_bills(alert: "PDF is available after payment.")
+    if @bill.deleted? || @bill.bill_line_items.empty?
+      redirect_back_or_bills(alert: "PDF is available after items are added.")
       return
     end
 

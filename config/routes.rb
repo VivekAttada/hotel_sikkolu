@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get "bills", to: "dashboard#bills", as: :bills
   get "paid_bills", to: "dashboard#paid_bills", as: :paid_bills
   get "bill_edits", to: "dashboard#bill_edits", as: :bill_edits
+  get "cancelled_kots", to: "dashboard#cancelled_kots", as: :cancelled_kots
   get "payments", to: "dashboard#payments", as: :payments
   get "settings", to: "dashboard#settings", as: :settings
   patch "settings", to: "settings#update"

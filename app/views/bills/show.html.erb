@@ -122,26 +122,6 @@
             <%= render "bills/totals", bill: @bill %>
           </div>
 
-          <% if @bill_removals.any? %>
-            <div class="hs-bill-removals mb-3">
-              <h6 class="text-danger mb-2">Removed after KOT</h6>
-              <ul class="hs-settle-removal-list mb-0">
-                <% @bill_removals.each do |removal| %>
-                  <li>
-                    <span><%= removal.item_name %> × <%= removal.quantity %></span>
-                    <span>₹ <%= number_with_precision(removal.line_total, precision: 2) %></span>
-                  </li>
-                <% end %>
-              </ul>
-              <% if @bill_removals.any? { |r| r.reason.present? } %>
-                <p class="hs-removal-reason mt-2 mb-0">
-                  <strong>Reason:</strong>
-                  <%= @bill_removals.map(&:reason).compact_blank.uniq.join(" / ") %>
-                </p>
-              <% end %>
-            </div>
-          <% end %>
-
             <%= render "bills/bill_checkout", bill: @bill, modal_id: "settleBillModal", title: "Settle and Save" %>
 
             <% if @bill.active? %>

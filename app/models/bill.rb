@@ -510,7 +510,9 @@ class Bill < ApplicationRecord
       unit_price: line_item.unit_price,
       quantity: quantity,
       line_total: line_item.unit_price.to_d * quantity,
-      removed_at: Time.current
+      removed_at: Time.current,
+      removed_by: Current.user,
+      reason: "Cancelled after KOT"
     )
   end
 

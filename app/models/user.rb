@@ -36,7 +36,7 @@ class User < ApplicationRecord
     when "bills" then admin? || manager? || staff?
     when "paid_bills" then admin? || manager?
     when "takeaway" then admin? || manager?
-    when "grocery", "checklist", "payments", "settings", "bill_edits" then admin?
+    when "grocery", "checklist", "payments", "settings", "bill_edits", "cancelled_kots" then admin?
     else false
     end
   end

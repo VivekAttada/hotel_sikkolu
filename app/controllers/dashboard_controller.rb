@@ -36,6 +36,12 @@ class DashboardController < ApplicationController
     render :index
   end
 
+  def cancelled_kots
+    @active_tab = "cancelled_kots"
+    load_cancelled_kots_data
+    render :index
+  end
+
   def payments
     @active_tab = "payments"
     load_payments_data
@@ -76,6 +82,8 @@ class DashboardController < ApplicationController
       paid_bills_path(query)
     when "bill_edits"
       bill_edits_path(query)
+    when "cancelled_kots"
+      cancelled_kots_path(query)
     when "payments"
       payments_path(query)
     when "settings"
@@ -142,6 +150,11 @@ class DashboardController < ApplicationController
   def load_bill_edits_data
     @edit_date = parse_date(params[:edit_date]) || Bill.business_date_for
     @bill_edits = BillEdit.for_day(@edit_date).includes(:user, bill: :dining_table).recent_first
+  end
+
+  def load_cancelled_kots_data
+    @cancelled_kot_date = parse_date(params[:kot_date]) || Bill.business_date_for
+    @cancelled_kots = BillRemoval.for_business_date(@cancelled_kot_date).includes(:removed_by, bill: [ :dining_table, :opened_by, :paid_by ]).recent_first
   end
 
   def load_payments_data

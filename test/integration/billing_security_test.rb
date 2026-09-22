@@ -196,6 +196,38 @@ class BillingSecurityTest < ActionDispatch::IntegrationTest
     assert_match "Added", response.body
   end
 
+  test "staff cannot open cancelled kots" do
+    sign_in @staff
+    get cancelled_kots_path
+    assert_redirected_to bills_path
+  end
+
+  test "admin cancelled kots lists post-KOT removals and bills omit them" do
+    Current.user = @staff
+    bill = Bill.open_for!(@table, user: @staff)
+    bill.add_menu_item!(@tea, quantity: 1)
+    coffee = MenuItem.create!(name: "Int Coffee Two", category: "Beverages", price: 50, position: 3, active: true)
+    bill.add_menu_item!(coffee, quantity: 1)
+    bill.issue_kot!
+    bill.mark_kot_sent!
+    tea_line = bill.bill_line_items.find_by(item_name: @tea.name)
+    bill.remove_line_item!(tea_line)
+
+    sign_in @staff
+    get bill_print_path(bill)
+    assert_response :success
+    assert_match coffee.name, response.body
+    assert_no_match "Removed during settlement", response.body
+    assert_no_match "Removed after KOT", response.body
+
+    sign_in @admin
+    get cancelled_kots_path
+    assert_response :success
+    assert_match "Cancelled KOTs", response.body
+    assert_match @tea.name, response.body
+    assert_match bill.bill_number, response.body
+  end
+
   test "manager can print any paid bill" do
     Current.user = @staff
     bill = Bill.open_for!(@table, user: @staff)
